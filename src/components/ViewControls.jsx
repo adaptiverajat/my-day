@@ -1,4 +1,4 @@
-const ViewControls = ({ currentView, setCurrentView, setCurrentDate, viewDensity, setViewDensity, onReportClick, onVoiceInputClick }) => {
+const ViewControls = ({ currentView, setCurrentView, setCurrentDate, viewDensity, setViewDensity, onReportClick, onVoiceInputClick, onHelpClick }) => {
   const handleToday = () => {
     setCurrentDate(new Date())
   }
@@ -58,6 +58,13 @@ const ViewControls = ({ currentView, setCurrentView, setCurrentDate, viewDensity
         title="Voice Input"
       >
         🎤
+      </button>
+      <button 
+        className="help-btn"
+        onClick={onHelpClick}
+        title="Help & Information"
+      >
+        ?
       </button>
       <div className="density-slider-container">
         <label className="density-label">Density:</label>

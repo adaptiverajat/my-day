@@ -37,6 +37,11 @@ body {
   background: white;
 }
 
+.app-logo{
+  height: 20px;
+  margin-right: 10px;
+}
+
 .app-title {
   font-size: 1rem;
   color: #333;
@@ -101,7 +106,7 @@ body {
 .nav-btn {
   padding: 5px 10px;
   border: 1px solid #ddd;
-  background: white;
+  background: burlywood;
   border-radius: 3px;
   cursor: pointer;
   font-size: 14px;
@@ -985,6 +990,26 @@ body {
   background: #5b4cdb;
 }
 
+.help-btn {
+  background: #17a2b8;
+  color: white;
+  border: none;
+  padding: 5px 12px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  margin-left: 8px;
+  transition: background 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.help-btn:hover {
+  background: #138496;
+}
+
 /* Report Page Styles */
 .report-page {
   min-height: 100vh;
@@ -1134,6 +1159,14 @@ body {
   opacity: 0.9;
   text-transform: uppercase;
   letter-spacing: 1px;
+}
+
+.recharts-layer{
+  font-size: 12px;
+}
+
+.recharts-legend-item-text {
+  font-size: 10px;
 }
 
 .summary-value {
@@ -1343,6 +1376,115 @@ body {
   font-weight: bold;
 }
 
+/* Help Modal Styles */
+.help-modal {
+  background: white;
+  padding: 0;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 700px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.help-header {
+  padding: 20px;
+  border-bottom: 2px solid #007bff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f8f9fa;
+  border-radius: 8px 8px 0 0;
+  flex-shrink: 0;
+}
+
+.help-header h2 {
+  margin: 0;
+  color: #007bff;
+  font-size: 1.5rem;
+}
+
+.help-close-btn {
+  background: none;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+  color: #666;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+}
+
+.help-close-btn:hover {
+  color: #333;
+}
+
+.help-content {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.help-content h3 {
+  color: #007bff;
+  margin: 0 0 15px 0;
+  font-size: 1.2rem;
+}
+
+.help-content section {
+  margin-bottom: 20px;
+}
+
+.help-content section h4 {
+  color: #333;
+  margin: 15px 0 10px 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.help-content section ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.help-content section li {
+  margin: 8px 0 8px 20px;
+  color: #555;
+  font-size: 14px;
+  line-height: 1.4;
+  position: relative;
+}
+
+.help-content section li:before {
+  content: "•";
+  position: absolute;
+  left: -12px;
+  color: #007bff;
+  font-weight: bold;
+}
+
+.help-content strong {
+  color: #333;
+  font-weight: 600;
+}
+
+.app-version {
+  font-size: 0.75rem;
+  color: #999;
+  font-weight: normal;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
 .color-picker {
   display: flex;
   gap: 8px;
@@ -1407,4 +1549,363 @@ body {
 .color-picker-input::-webkit-color-swatch {
   border: none;
   border-radius: 4px;
+}
+
+/* Health Modal Styles */
+.health-modal {
+  background: white;
+  padding: 0;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+}
+
+.health-modal-header {
+  padding: 20px;
+  border-bottom: 2px solid #17a2b8;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f0f8f9;
+  border-radius: 8px 8px 0 0;
+  flex-shrink: 0;
+}
+
+.health-modal-header h2 {
+  margin: 0;
+  color: #17a2b8;
+  font-size: 1.5rem;
+}
+
+.health-modal-content {
+  padding: 25px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.health-modal-intro {
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+.input-error {
+  border-color: #dc3545 !important;
+  background-color: #fff5f5 !important;
+}
+
+.error-text {
+  display: block;
+  color: #dc3545;
+  font-size: 12px;
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+/* Health Advice Section */
+.health-advice-section {
+  background: #f0f8f9;
+  padding: 25px;
+  border-radius: 8px;
+  border-left: 4px solid #17a2b8;
+  margin: 30px 0;
+  text-align: left;
+}
+
+.health-advice-section h2 {
+  margin: 0 0 20px 0;
+  color: #17a2b8;
+  font-size: 1.3rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.health-advice-content {
+  color: #333;
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+.advice-item {
+  margin: 12px 0;
+  padding: 10px;
+  background: white;
+  border-left: 3px solid #17a2b8;
+  padding-left: 15px;
+  border-radius: 3px;
+  font-weight: 500;
+  color: #333;
+}
+
+.advice-bullet {
+  margin: 8px 0 8px 20px;
+  color: #555;
+  position: relative;
+}
+
+.advice-bullet:before {
+  content: "→";
+  position: absolute;
+  left: -15px;
+  color: #17a2b8;
+  font-weight: bold;
+}
+
+.advice-paragraph {
+  margin: 10px 0;
+  color: #555;
+}
+
+.error-box {
+  background: #fff5f5;
+  border: 1px solid #f5c6cb;
+  border-radius: 6px;
+  padding: 15px;
+  margin-top: 15px;
+}
+
+.error-hint {
+  color: #721c24;
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+.loading-message {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+}
+
+.report-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.health-button {
+  padding: 10px 20px;
+  background: #17a2b8;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background 0.3s ease;
+}
+
+.health-button:hover {
+  background: #138496;
+}
+
+/* Health Stats Cards */
+.health-stats-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.health-stat-card {
+  background: white;
+  padding: 15px;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.health-stat-card h5 {
+  margin: 0 0 8px 0;
+  font-size: 12px;
+  color: #666;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.stat-value {
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #17a2b8;
+}
+
+/* Health Modal Form Sections */
+.form-section {
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.form-section:last-child {
+  border-bottom: none;
+}
+
+.form-section h4 {
+  margin: 0 0 15px 0;
+  color: #333;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.form-group {
+  margin-bottom: 12px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  color: #555;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: border-color 0.2s ease;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #17a2b8;
+  box-shadow: 0 0 0 3px rgba(23, 162, 184, 0.1);
+}
+
+.form-group input:disabled {
+  background-color: #f5f5f5;
+  cursor: not-allowed;
+}
+
+.health-no-data {
+  color: #999;
+  font-size: 14px;
+  text-align: center;
+  padding: 20px;
+}
+
+/* Date Section Styles */
+.date-section {
+  background: #f9f9f9;
+  border: 1px solid #e0e0e0;
+}
+
+.date-section .form-group input {
+  padding: 10px 12px;
+  font-size: 14px;
+}
+
+.date-display {
+  margin-top: 8px;
+  color: #666;
+  font-size: 13px;
+  padding: 8px 0;
+}
+
+/* Meal Management Styles */
+.btn-add-meal {
+  width: 100%;
+  padding: 10px;
+  background: #28a745;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background 0.3s ease;
+  margin-top: 10px;
+}
+
+.btn-add-meal:hover {
+  background: #218838;
+}
+
+.meals-list {
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.meals-list h5 {
+  margin: 0 0 10px 0;
+  color: #333;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.meals-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.meal-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 10px;
+  gap: 10px;
+}
+
+.meal-info {
+  display: flex;
+  gap: 10px;
+  flex: 1;
+  align-items: center;
+}
+
+.meal-time {
+  background: #e8f4f8;
+  color: #17a2b8;
+  padding: 4px 8px;
+  border-radius: 3px;
+  font-weight: 600;
+  font-size: 13px;
+  min-width: 70px;
+  text-align: center;
+}
+
+.meal-detail {
+  color: #555;
+  font-size: 14px;
+  flex: 1;
+}
+
+.meal-remove-btn {
+  background: #dc3545;
+  color: white;
+  border: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease;
+  padding: 0;
+}
+
+.meal-remove-btn:hover {
+  background: #c82333;
 }

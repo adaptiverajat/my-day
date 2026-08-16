@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts'
 import { getWeekDays, getMonthDays, getYearMonths, getTasksForDate, getTasksForMonth } from '../utils/dateUtils'
+import HealthAssessmentModal from './HealthAssessmentModal'
+import HealthAdviceSection from './HealthAdviceSection'
 
 const CustomTooltip = ({ active, payload }) => {
   if (active && payload && payload.length) {
@@ -34,6 +36,12 @@ const Report = () => {
   const [error, setError] = useState(null)
   const [aiCategories, setAiCategories] = useState(null)
   const [dailyStats, setDailyStats] = useState([])
+  const [showHealthModal, setShowHealthModal] = useState(false)
+  const [healthHistory, setHealthHistory] = useState(() => {
+    // Try to load health history from localStorage
+    const saved = localStorage.getItem('healthHistory')
+    return saved ? JSON.parse(saved) : []
+  })
 
   // Get data from navigation state or use defaults
   const currentDate = location.state?.currentDate || new Date()
@@ -45,6 +53,16 @@ const Report = () => {
   useEffect(() => {
     fetchTasksForReport()
   }, [currentDate, currentView])
+
+  // Check if health data is available when component mounts
+  useEffect(() => {
+    if (reportData) {
+      // Show health modal on first load to encourage logging
+      if (healthHistory.length === 0 || !hasLoggedToday()) {
+        setShowHealthModal(true)
+      }
+    }
+  }, [reportData])
 
   const fetchTasksForReport = async () => {
     try {
@@ -117,6 +135,37 @@ const Report = () => {
     }
   }
 
+  const hasLoggedToday = () => {
+    if (healthHistory.length === 0) return false
+    const today = new Date().toDateString()
+    return healthHistory.some(log => new Date(log.date).toDateString() === today)
+  }
+
+  const handleHealthLogSubmit = (logData) => {
+    // Check if there's already a log for this date and update it
+    const dateString = new Date(logData.date).toDateString()
+    const existingIndex = healthHistory.findIndex(
+      log => new Date(log.date).toDateString() === dateString
+    )
+
+    let updatedHistory
+    if (existingIndex >= 0) {
+      updatedHistory = [...healthHistory]
+      updatedHistory[existingIndex] = logData
+    } else {
+      updatedHistory = [...healthHistory, logData]
+    }
+
+    // Keep only last 60 days of history
+    if (updatedHistory.length > 60) {
+      updatedHistory = updatedHistory.slice(-60)
+    }
+
+    setHealthHistory(updatedHistory)
+    localStorage.setItem('healthHistory', JSON.stringify(updatedHistory))
+    setShowHealthModal(false)
+  }
+
   const calculateTimeStats = (tasks, view) => {
     let totalMinutes = 0
     const categoryBreakdown = {}
@@ -170,59 +219,43 @@ const Report = () => {
   }
 
   const calculateDailyStats = (tasks, dateRange) => {
+    const MORNING_START = 6.5 * 60 // 6:30 AM in minutes = 390
+    const MORNING_END = 11.5 * 60 // 11:30 AM in minutes = 690
+    const WINDOW_DURATION = MORNING_END - MORNING_START // 300 minutes = 5 hours
+    
     const stats = []
     
     dateRange.forEach(date => {
       if (!date) return
       
       const dayTasks = getTasksForDate(tasks, date)
-      let workMinutes = 0
-      let earliestTask = null
-      let latestTask = null
+      let busyMinutes = 0
       
       dayTasks.forEach(task => {
         const [fromHours, fromMinutes] = task.from_time.split(':').map(Number)
         const [toHours, toMinutes] = task.to_time.split(':').map(Number)
-        const duration = (toHours * 60 + toMinutes) - (fromHours * 60 + fromMinutes)
-        workMinutes += duration
+        const taskStart = fromHours * 60 + fromMinutes
+        const taskEnd = toHours * 60 + toMinutes
         
-        const taskStartMinutes = fromHours * 60 + fromMinutes
-        const taskEndMinutes = toHours * 60 + toMinutes
-        
-        if (!earliestTask || taskStartMinutes < earliestTask) {
-          earliestTask = taskStartMinutes
-        }
-        if (!latestTask || taskEndMinutes > latestTask) {
-          latestTask = taskEndMinutes
+        // Check if task overlaps with 6:30am to 11:30am window
+        if (taskEnd > MORNING_START && taskStart < MORNING_END) {
+          // Calculate overlap
+          const overlapStart = Math.max(taskStart, MORNING_START)
+          const overlapEnd = Math.min(taskEnd, MORNING_END)
+          busyMinutes += (overlapEnd - overlapStart)
         }
       })
       
-      // Estimate sleep/wake times (assumes 8 hours sleep, wake up before earliest task)
-      const sleepHours = 8
-      const wakeUpTime = earliestTask ? Math.max(6 * 60, earliestTask - 60) : 7 * 60 // 7 AM default
-      const sleepTime = (wakeUpTime + sleepHours * 60) % (24 * 60) // Sleep time
-      
-      const freeMinutes = (9 * 60) - workMinutes // 9-hour workday
+      const freeMinutes = Math.max(0, WINDOW_DURATION - busyMinutes)
       
       stats.push({
         date: date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
-        workHours: (workMinutes / 60).toFixed(1),
-        freeHours: Math.max(0, (freeMinutes / 60).toFixed(1)),
-        wakeUpTime: formatTime(wakeUpTime),
-        sleepTime: formatTime(sleepTime),
-        sleepHours: sleepHours.toFixed(1)
+        busyHours: (busyMinutes / 60).toFixed(1),
+        freeHours: (freeMinutes / 60).toFixed(1)
       })
     })
     
     return stats
-  }
-
-  const formatTime = (minutes) => {
-    const hours = Math.floor(minutes / 60)
-    const mins = minutes % 60
-    const ampm = hours >= 12 ? 'PM' : 'AM'
-    const displayHours = hours % 12 || 12
-    return `${displayHours}:${mins.toString().padStart(2, '0')} ${ampm}`
   }
 
   const generateAICategorization = async (tasks) => {
@@ -512,27 +545,21 @@ Individual tasks should show each task's hours.`
         </div>
 
         <div className="stats-section">
-          <h2>Daily Statistics</h2>
+          <h2>Daily Statistics (6:30 AM - 11:30 AM)</h2>
           <table className="stats-table">
             <thead>
               <tr>
                 <th>Date</th>
-                <th>Work Hours</th>
+                <th>Busy Hours</th>
                 <th>Free Hours</th>
-                <th>Wake Up</th>
-                <th>Sleep Time</th>
-                <th>Sleep Hours</th>
               </tr>
             </thead>
             <tbody>
               {dailyStats.map((stat, index) => (
                 <tr key={index}>
                   <td>{stat.date}</td>
-                  <td>{stat.workHours}h</td>
+                  <td>{stat.busyHours}h</td>
                   <td>{stat.freeHours}h</td>
-                  <td>{stat.wakeUpTime}</td>
-                  <td>{stat.sleepTime}</td>
-                  <td>{stat.sleepHours}h</td>
                 </tr>
               ))}
             </tbody>
@@ -561,7 +588,22 @@ Individual tasks should show each task's hours.`
           </div>
         </div>
 
-        <button className="refresh-button" onClick={() => fetchTasksForReport()}>Refresh Report</button>
+        <HealthAdviceSection healthHistory={healthHistory} />
+
+        <div className="report-actions">
+          <button className="refresh-button" onClick={() => fetchTasksForReport()}>Refresh Report</button>
+          <button className="health-button" onClick={() => setShowHealthModal(true)}>
+            📋 Log Today's Health
+          </button>
+        </div>
+
+        {showHealthModal && (
+          <HealthAssessmentModal 
+            date={currentDate}
+            onClose={() => setShowHealthModal(false)}
+            onSubmit={handleHealthLogSubmit}
+          />
+        )}
       </div>
     </div>
   )

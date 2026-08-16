@@ -25,6 +25,8 @@ const VoiceInputModal = ({ show, onClose, currentDate, onTasksCreated }) => {
 
       const prompt = `Parse these task descriptions into structured calendar tasks. Current date: ${currentDate.toISOString().split('T')[0]}
 
+      Format minutes to closest solid hours or half-hours only. Floor Start times and Ceil End times. Only 00 or 30 minutes allowed. If no specific time is mentioned, use reasonable defaults (e.g., 9:00-10:00). Use the default color #e3f2fd unless specified otherwise.
+
 Return ONLY a JSON array with this structure:
 [
   {

@@ -6,6 +6,7 @@ import ViewControls from './components/ViewControls'
 import TodoList from './components/TodoList'
 import TaskModal from './components/TaskModal'
 import VoiceInputModal from './components/VoiceInputModal'
+import HelpModal from './components/HelpModal'
 import WeekView from './components/WeekView'
 import DayView from './components/DayView'
 import MonthView from './components/MonthView'
@@ -29,6 +30,7 @@ function Calendar() {
   const [editingTask, setEditingTask] = useState(null)
   const [viewDensity, setViewDensity] = useState(1) // 0: normal, 1: minimal, 2: ultra minimal
   const [showVoiceInput, setShowVoiceInput] = useState(false)
+  const [showHelp, setShowHelp] = useState(false)
   
   // Derive flags from slider value
   const minimalView = viewDensity >= 1
@@ -130,7 +132,7 @@ function Calendar() {
     <div className="calendar-app">
       <div className="header-row">
         <CalendarHeader />
-        <ViewControls currentView={currentView} setCurrentView={setCurrentView} setCurrentDate={setCurrentDate} viewDensity={viewDensity} setViewDensity={setViewDensity} onReportClick={() => navigate('/report', { state: { currentDate, currentView } })} onVoiceInputClick={() => setShowVoiceInput(true)} />
+        <ViewControls currentView={currentView} setCurrentView={setCurrentView} setCurrentDate={setCurrentDate} viewDensity={viewDensity} setViewDensity={setViewDensity} onReportClick={() => navigate('/report', { state: { currentDate, currentView } })} onVoiceInputClick={() => setShowVoiceInput(true)} onHelpClick={() => setShowHelp(true)} />
         <div className="date-display">
           {currentView === 'week' && (
             <>
@@ -247,6 +249,8 @@ function Calendar() {
           fetchTasks()
         }}
       />
+
+      {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}
 
     </div>
   )
