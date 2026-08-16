@@ -5,6 +5,41 @@ const cors = require('cors');
 const app = express();
 const port = 3001;
 
+const formatDateOnly = (value) => {
+  if (!value) return '';
+
+  if (value instanceof Date) {
+    const year = value.getFullYear();
+    const month = String(value.getMonth() + 1).padStart(2, '0');
+    const day = String(value.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed) return '';
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+      return trimmed;
+    }
+
+    const parsed = new Date(trimmed);
+    if (!Number.isNaN(parsed.getTime())) {
+      const year = parsed.getFullYear();
+      const month = String(parsed.getMonth() + 1).padStart(2, '0');
+      const day = String(parsed.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    const datePart = trimmed.slice(0, 10);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(datePart)) {
+      return datePart;
+    }
+  }
+
+  return String(value).slice(0, 10);
+};
+
 const parseLocalDate = (value) => {
   if (!value) return null;
 
@@ -31,7 +66,8 @@ const dbConfig = {
   waitForConnections: true,
   queueLimit: 0,
   enableKeepAlive: true,
-  keepAliveInitialDelay: 0
+  keepAliveInitialDelay: 0,
+  dateStrings: true
 };
 
 // Create MySQL connection pool (without database initially)
@@ -43,7 +79,8 @@ const poolWithoutDB = mysql.createPool({
   waitForConnections: true,
   queueLimit: 0,
   enableKeepAlive: true,
-  keepAliveInitialDelay: 0
+  keepAliveInitialDelay: 0,
+  dateStrings: true
 });
 
 // Create MySQL connection pool (with database) - will be initialized after DB setup
@@ -171,7 +208,11 @@ app.get('/api/calendar-tasks', async (req, res) => {
     }
     
     const [rows] = await pool.query(query, params);
-    res.json({ success: true, tasks: rows });
+    const tasks = rows.map(task => ({
+      ...task,
+      task_date: task.task_date ? String(task.task_date).slice(0, 10) : task.task_date
+    }));
+    res.json({ success: true, tasks });
   } catch (error) {
     console.error('Error fetching calendar tasks:', error);
     res.status(500).json({ success: false, message: 'Error fetching calendar tasks', error: error.message });
@@ -197,7 +238,11 @@ app.get('/api/tasks', async (req, res) => {
     }
     
     const [rows] = await pool.query(query, params);
-    res.json({ success: true, tasks: rows });
+    const tasks = rows.map(task => ({
+      ...task,
+      task_date: task.task_date ? String(task.task_date).slice(0, 10) : task.task_date
+    }));
+    res.json({ success: true, tasks });
   } catch (error) {
     console.error('Error fetching tasks:', error);
     res.status(500).json({ success: false, message: 'Error fetching tasks', error: error.message });

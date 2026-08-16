@@ -101,7 +101,8 @@ function Calendar() {
   }
 
   const handleTaskClick = (task) => {
-    setSelectedDate(parseDateInputValue(task.task_date))
+    const parsedDate = parseDateInputValue(task.task_date)
+    setSelectedDate(parsedDate)
     setEditingTask(task)
     setInitialFromTime(task.from_time)
     setInitialToTime(task.to_time)

@@ -12,11 +12,25 @@ export const parseDateInputValue = (value) => {
   if (!value) return new Date()
 
   if (value instanceof Date) {
-    return new Date(value.getTime())
+    return new Date(value.getFullYear(), value.getMonth(), value.getDate())
   }
 
-  const [year, month, day] = value.split('-').map(Number)
-  return new Date(year, month - 1, day)
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    if (!trimmed) return new Date()
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+      const [year, month, day] = trimmed.split('-').map(Number)
+      return new Date(year, month - 1, day)
+    }
+
+    const parsed = new Date(trimmed)
+    if (!Number.isNaN(parsed.getTime())) {
+      return parsed
+    }
+  }
+
+  return new Date()
 }
 
 export const getWeekDays = (currentDate) => {
@@ -97,6 +111,23 @@ export const getCurrentRange = (currentDate) => {
     endDate: formatDateInputValue(days[days.length - 1]),
     days
   }
+}
+
+export const isRecurrenceEndDateValid = (value, taskDate) => {
+  if (!value) return true
+
+  const candidate = parseDateInputValue(value)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  candidate.setHours(0, 0, 0, 0)
+
+  const startDate = taskDate ? parseDateInputValue(taskDate) : null
+  if (startDate) {
+    startDate.setHours(0, 0, 0, 0)
+    return candidate > today && candidate > startDate
+  }
+
+  return candidate > today
 }
 
 export const formatCurrentRangeDisplay = (currentDate) => {

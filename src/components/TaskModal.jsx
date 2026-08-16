@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { isRecurrenceEndDateValid } from '../utils/dateUtils'
 
 const formatDateInputValue = (date) => {
   if (!date) return ''
@@ -25,11 +26,6 @@ const normalizeDateInputValue = (value) => {
       return trimmed
     }
 
-    const datePart = trimmed.split('T')[0]
-    if (/^\d{4}-\d{2}-\d{2}$/.test(datePart)) {
-      return datePart
-    }
-
     const parsed = new Date(trimmed)
     if (!Number.isNaN(parsed.getTime())) {
       return formatDateInputValue(parsed)
@@ -53,6 +49,8 @@ const TaskModal = ({ show, onClose, selectedDate, onSave, timeSlots, initialFrom
   const [taskDate, setTaskDate] = useState(
     () => normalizeDateInputValue(editingTask?.task_date || selectedDate) || formatDateInputValue(new Date())
   )
+  const [timeError, setTimeError] = useState('')
+  const [recurrenceError, setRecurrenceError] = useState('')
 
   const [editMode, setEditMode] = useState('single') // 'single', 'all', 'future'
   const [deleteMode, setDeleteMode] = useState('single') // 'single', 'all', 'future'
@@ -96,6 +94,33 @@ const TaskModal = ({ show, onClose, selectedDate, onSave, timeSlots, initialFrom
   }, [editingTask, initialFromTime, initialToTime, selectedDate, show])
 
   const handleSubmit = () => {
+    if (!newTask.from_time || !newTask.to_time) {
+      setTimeError('Please select both start and end times.')
+      return
+    }
+
+    const startMinutes = newTask.from_time.split(':').reduce((total, part, index) => {
+      const value = Number(part)
+      return total + (index === 0 ? value * 60 : value)
+    }, 0)
+    const endMinutes = newTask.to_time.split(':').reduce((total, part, index) => {
+      const value = Number(part)
+      return total + (index === 0 ? value * 60 : value)
+    }, 0)
+
+    if (endMinutes <= startMinutes) {
+      setTimeError('End time must be after the start time.')
+      return
+    }
+
+    if (newTask.is_recurring && newTask.recurrence_end_date && !isRecurrenceEndDateValid(newTask.recurrence_end_date, taskDate)) {
+      setRecurrenceError('Recurrence end date must be after both today and the task date.')
+      return
+    }
+
+    setTimeError('')
+    setRecurrenceError('')
+
     if (newTask.title.trim()) {
       onSave({
         ...newTask,
@@ -120,7 +145,7 @@ const TaskModal = ({ show, onClose, selectedDate, onSave, timeSlots, initialFrom
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <h3>{editingTask ? 'Edit Task' : 'Add Task'} for {selectedDate?.toLocaleDateString()}</h3>
         
-        {editingTask != 0 && editingTask.is_recurring !=0 && (
+        {editingTask && editingTask.is_recurring && (
           <div className="form-group edit-mode-selection">
             <label>Edit Mode:</label>
             <div className="edit-mode-options">
@@ -146,7 +171,7 @@ const TaskModal = ({ show, onClose, selectedDate, onSave, timeSlots, initialFrom
           </div>
         )}
 
-        {editingTask !=0 && editingTask.is_recurring !=0 && (
+        {editingTask && editingTask.is_recurring && (
           <div className="form-group edit-mode-selection">
             <label>Delete Mode:</label>
             <div className="edit-mode-options">
@@ -177,7 +202,14 @@ const TaskModal = ({ show, onClose, selectedDate, onSave, timeSlots, initialFrom
           <input
             type="date"
             value={taskDate}
-            onChange={(e) => setTaskDate(e.target.value)}
+            onChange={(e) => {
+              setTaskDate(e.target.value)
+              if (newTask.is_recurring && newTask.recurrence_end_date && !isRecurrenceEndDateValid(newTask.recurrence_end_date, e.target.value)) {
+                setRecurrenceError('Recurrence end date must be after both today and the task date.')
+              } else {
+                setRecurrenceError('')
+              }
+            }}
           />
         </div>
         <div className="form-group">
@@ -194,7 +226,10 @@ const TaskModal = ({ show, onClose, selectedDate, onSave, timeSlots, initialFrom
             <label>From Time:</label>
             <select
               value={newTask.from_time}
-              onChange={(e) => setNewTask({...newTask, from_time: e.target.value})}
+              onChange={(e) => {
+                setNewTask({...newTask, from_time: e.target.value})
+                setTimeError('')
+              }}
             >
               <option value="">Select time</option>
               {timeSlots.map(time => (
@@ -206,7 +241,10 @@ const TaskModal = ({ show, onClose, selectedDate, onSave, timeSlots, initialFrom
             <label>To Time:</label>
             <select
               value={newTask.to_time}
-              onChange={(e) => setNewTask({...newTask, to_time: e.target.value})}
+              onChange={(e) => {
+                setNewTask({...newTask, to_time: e.target.value})
+                setTimeError('')
+              }}
             >
               <option value="">Select time</option>
               {timeSlots.map(time => (
@@ -215,6 +253,7 @@ const TaskModal = ({ show, onClose, selectedDate, onSave, timeSlots, initialFrom
             </select>
           </div>
         </div>
+        {timeError && <div className="form-error" style={{ color: '#d32f2f', marginTop: '8px', fontSize: '14px' }}>{timeError}</div>}
         <div className="form-group">
           <label>Details:</label>
           <textarea
@@ -266,21 +305,24 @@ const TaskModal = ({ show, onClose, selectedDate, onSave, timeSlots, initialFrom
         </div>
         {(!editingTask || (editingTask !=0 && editingTask.is_recurring !=0)) && (
           <>
-            <div className="form-group">
-              <label>
-                <input
-                  type="checkbox"
-                  checked={newTask.is_recurring}
-                  onChange={(e) => {
-                    const isChecked = e.target.checked
-                    setNewTask({
-                      ...newTask, 
-                      is_recurring: isChecked,
-                      recurrence_type: isChecked ? 'daily' : 'none'
-                    })
-                  }}
-                />
-                Recurring Task
+            <div className="form-group recurring-toggle-group">
+              <label className="toggle-label">
+                <span>Recurring Task</span>
+                <span className="toggle-switch">
+                  <input
+                    type="checkbox"
+                    checked={newTask.is_recurring}
+                    onChange={(e) => {
+                      const isChecked = e.target.checked
+                      setNewTask({
+                        ...newTask,
+                        is_recurring: isChecked,
+                        recurrence_type: isChecked ? 'daily' : 'none'
+                      })
+                    }}
+                  />
+                  <span className="toggle-slider" />
+                </span>
               </label>
             </div>
             {newTask.is_recurring && (
@@ -302,9 +344,20 @@ const TaskModal = ({ show, onClose, selectedDate, onSave, timeSlots, initialFrom
                   <input
                     type="date"
                     value={newTask.recurrence_end_date}
-                    onChange={(e) => setNewTask({...newTask, recurrence_end_date: e.target.value})}
+                    min={(() => {
+                      const tomorrow = new Date()
+                      tomorrow.setDate(tomorrow.getDate() + 1)
+                      const taskDateValue = taskDate ? new Date(taskDate) : null
+                      const minimumDate = taskDateValue && taskDateValue > tomorrow ? taskDateValue : tomorrow
+                      return formatDateInputValue(minimumDate)
+                    })()}
+                    onChange={(e) => {
+                      setNewTask({ ...newTask, recurrence_end_date: e.target.value })
+                      setRecurrenceError('')
+                    }}
                     placeholder="Leave empty for no end date"
                   />
+                  {recurrenceError && <div className="form-error" style={{ color: '#d32f2f', marginTop: '8px', fontSize: '14px' }}>{recurrenceError}</div>}
                 </div>
               </>
             )}
