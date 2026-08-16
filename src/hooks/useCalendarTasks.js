@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getDateRange } from '../utils/dateUtils'
+import { getDateRange, getCurrentRange } from '../utils/dateUtils'
 
 const API_URL = 'http://localhost:3001/api'
 
@@ -12,6 +12,10 @@ export const useCalendarTasks = (currentDate, currentView) => {
       
       if (currentView === 'week') {
         const range = getDateRange(currentDate)
+        startDate = range.startDate
+        endDate = range.endDate
+      } else if (currentView === 'current') {
+        const range = getCurrentRange(currentDate)
         startDate = range.startDate
         endDate = range.endDate
       } else if (currentView === 'day') {
@@ -32,7 +36,8 @@ export const useCalendarTasks = (currentDate, currentView) => {
         const response = await fetch(`${API_URL}/calendar-tasks?startDate=${startDate}&endDate=${endDate}`)
         const data = await response.json()
         if (data.success) {
-          setTasks(data.tasks)
+          // Force re-render by setting a new array reference
+          setTasks([...data.tasks])
         }
       }
     } catch (error) {
@@ -111,11 +116,6 @@ export const useCalendarTasks = (currentDate, currentView) => {
   useEffect(() => {
     fetchTasks()
   }, [currentDate, currentView])
-
-  // Also fetch on mount
-  useEffect(() => {
-    fetchTasks()
-  }, [])
 
   return { tasks, addTask, deleteTask, updateTask, fetchTasks }
 }

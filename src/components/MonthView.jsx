@@ -1,5 +1,6 @@
 import { getMonthDays } from '../utils/dateUtils'
 import { getTasksForDate } from '../utils/dateUtils'
+import { formatTime12Hour } from '../utils/timeUtils'
 
 const MonthView = ({ currentDate, tasks, onDayClick, onTaskClick }) => {
   const monthDays = getMonthDays(currentDate)
@@ -31,6 +32,7 @@ const MonthView = ({ currentDate, tasks, onDayClick, onTaskClick }) => {
                         e.stopPropagation()
                         onTaskClick(task)
                       }}
+                      title={`${formatTime12Hour(task.from_time)} - ${formatTime12Hour(task.to_time)}`}
                     >
                       {task.title}
                       {task.is_recurring && <span className="recurring-indicator">↻</span>}

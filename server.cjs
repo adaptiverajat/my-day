@@ -165,6 +165,32 @@ app.get('/api/calendar-tasks', async (req, res) => {
   }
 });
 
+// Alias endpoint for tasks (same as calendar-tasks)
+app.get('/api/tasks', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(500).json({ success: false, message: 'Database not initialized. Please run setup first.' });
+    }
+    
+    const { startDate, endDate } = req.query;
+    let query = 'SELECT * FROM calendar_tasks';
+    let params = [];
+    
+    if (startDate && endDate) {
+      query += ' WHERE task_date BETWEEN ? AND ? ORDER BY task_date, from_time';
+      params = [startDate, endDate];
+    } else {
+      query += ' ORDER BY task_date, from_time';
+    }
+    
+    const [rows] = await pool.query(query, params);
+    res.json({ success: true, tasks: rows });
+  } catch (error) {
+    console.error('Error fetching tasks:', error);
+    res.status(500).json({ success: false, message: 'Error fetching tasks', error: error.message });
+  }
+});
+
 // Add a new calendar task
 app.post('/api/calendar-tasks', async (req, res) => {
   try {

@@ -1,21 +1,25 @@
 import { useState, useEffect } from 'react'
+import { Routes, Route, useNavigate } from 'react-router-dom'
 import './App.css'
 import CalendarHeader from './components/CalendarHeader'
 import ViewControls from './components/ViewControls'
 import TodoList from './components/TodoList'
 import TaskModal from './components/TaskModal'
+import VoiceInputModal from './components/VoiceInputModal'
 import WeekView from './components/WeekView'
 import DayView from './components/DayView'
 import MonthView from './components/MonthView'
 import YearView from './components/YearView'
+import Report from './components/Report'
 import { useCalendarTasks } from './hooks/useCalendarTasks'
 import { useTodoItems } from './hooks/useTodoItems'
 import { useTimeSlots } from './hooks/useTimeSlots'
 import { useCurrentTime } from './hooks/useCurrentTime'
-import { formatDateDisplay, formatMonthDisplay, formatYearDisplay } from './utils/dateUtils'
+import { formatDateDisplay, formatMonthDisplay, formatYearDisplay, getCurrentRange, formatCurrentRangeDisplay } from './utils/dateUtils'
 import { calculateEndTime } from './utils/timeUtils'
 
-function App() {
+function Calendar() {
+  const navigate = useNavigate()
   const [currentDate, setCurrentDate] = useState(new Date())
   const [currentView, setCurrentView] = useState('week')
   const [showModal, setShowModal] = useState(false)
@@ -23,8 +27,16 @@ function App() {
   const [initialFromTime, setInitialFromTime] = useState('')
   const [initialToTime, setInitialToTime] = useState('')
   const [editingTask, setEditingTask] = useState(null)
+  const [viewDensity, setViewDensity] = useState(1) // 0: normal, 1: minimal, 2: ultra minimal
+  const [showVoiceInput, setShowVoiceInput] = useState(false)
+  
+  // Derive flags from slider value
+  const minimalView = viewDensity >= 1
+  const ultraMinimalView = viewDensity === 2
   
   const { tasks, addTask, updateTask, deleteTask, fetchTasks } = useCalendarTasks(currentDate, currentView)
+  
+
   const { todoItems, addTodoItem, toggleTodoItem, deleteTodoItem, updateTodoItem } = useTodoItems()
   const timeSlots = useTimeSlots()
   const currentTime = useCurrentTime()
@@ -42,6 +54,12 @@ function App() {
   }, [])
 
   const navigateWeek = (direction) => {
+    const newDate = new Date(currentDate)
+    newDate.setDate(newDate.getDate() + (direction * 7))
+    setCurrentDate(newDate)
+  }
+
+  const navigateCurrent = (direction) => {
     const newDate = new Date(currentDate)
     newDate.setDate(newDate.getDate() + (direction * 7))
     setCurrentDate(newDate)
@@ -110,49 +128,49 @@ function App() {
 
   return (
     <div className="calendar-app">
-      <CalendarHeader />
-      <ViewControls currentView={currentView} setCurrentView={setCurrentView} setCurrentDate={setCurrentDate} />
-
-      <div className="date-display">
-        {currentView === 'week' && (
-          <>
-            <button className="nav-btn" onClick={() => navigateWeek(-1)}>←</button>
-            <h2>{formatDateDisplay(currentDate)}</h2>
-            <button className="nav-btn" onClick={() => navigateWeek(1)}>→</button>
-          </>
-        )}
-        {currentView === 'day' && (
-          <>
-            <button className="nav-btn" onClick={() => navigateDay(-1)}>←</button>
-            <h2>{formatDateDisplay(currentDate)}</h2>
-            <button className="nav-btn" onClick={() => navigateDay(1)}>→</button>
-          </>
-        )}
-        {currentView === 'month' && (
-          <>
-            <button className="nav-btn" onClick={() => navigateMonth(-1)}>←</button>
-            <h2>{formatMonthDisplay(currentDate)}</h2>
-            <button className="nav-btn" onClick={() => navigateMonth(1)}>→</button>
-          </>
-        )}
-        {currentView === 'year' && (
-          <>
-            <button className="nav-btn" onClick={() => navigateYear(-1)}>←</button>
-            <h2>{formatYearDisplay(currentDate)}</h2>
-            <button className="nav-btn" onClick={() => navigateYear(1)}>→</button>
-          </>
-        )}
+      <div className="header-row">
+        <CalendarHeader />
+        <ViewControls currentView={currentView} setCurrentView={setCurrentView} setCurrentDate={setCurrentDate} viewDensity={viewDensity} setViewDensity={setViewDensity} onReportClick={() => navigate('/report', { state: { currentDate, currentView } })} onVoiceInputClick={() => setShowVoiceInput(true)} />
+        <div className="date-display">
+          {currentView === 'week' && (
+            <>
+              <button className="nav-btn" onClick={() => navigateWeek(-1)}>←</button>
+              <h2>{formatDateDisplay(currentDate)}</h2>
+              <button className="nav-btn" onClick={() => navigateWeek(1)}>→</button>
+            </>
+          )}
+          {currentView === 'current' && (
+            <>
+              <button className="nav-btn" onClick={() => navigateCurrent(-1)}>←</button>
+              <h2>{formatCurrentRangeDisplay(currentDate)}</h2>
+              <button className="nav-btn" onClick={() => navigateCurrent(1)}>→</button>
+            </>
+          )}
+          {currentView === 'day' && (
+            <>
+              <button className="nav-btn" onClick={() => navigateDay(-1)}>←</button>
+              <h2>{formatDateDisplay(currentDate)}</h2>
+              <button className="nav-btn" onClick={() => navigateDay(1)}>→</button>
+            </>
+          )}
+          {currentView === 'month' && (
+            <>
+              <button className="nav-btn" onClick={() => navigateMonth(-1)}>←</button>
+              <h2>{formatMonthDisplay(currentDate)}</h2>
+              <button className="nav-btn" onClick={() => navigateMonth(1)}>→</button>
+            </>
+          )}
+          {currentView === 'year' && (
+            <>
+              <button className="nav-btn" onClick={() => navigateYear(-1)}>←</button>
+              <h2>{formatYearDisplay(currentDate)}</h2>
+              <button className="nav-btn" onClick={() => navigateYear(1)}>→</button>
+            </>
+          )}
+        </div>
       </div>
 
-      <TodoList 
-        todoItems={todoItems}
-        onAdd={addTodoItem}
-        onToggle={toggleTodoItem}
-        onDelete={deleteTodoItem}
-        onUpdate={updateTodoItem}
-      />
-
-      {currentView === 'week' && (
+      {(currentView === 'week' || currentView === 'current') && (
         <WeekView 
           currentDate={currentDate}
           tasks={tasks}
@@ -160,11 +178,14 @@ function App() {
           onDayClick={handleDayClick}
           onTaskClick={handleTaskClick}
           currentTime={currentTime}
+          days={currentView === 'current' ? getCurrentRange(currentDate).days : undefined}
+          viewDensity={viewDensity}
         />
       )}
 
       {currentView === 'day' && (
         <DayView 
+          key={`day-${currentDate.toISOString()}-${tasks.length}`}
           currentDate={currentDate}
           tasks={tasks}
           onDayClick={handleDayClick}
@@ -189,6 +210,14 @@ function App() {
         />
       )}
 
+      <TodoList 
+        todoItems={todoItems}
+        onAdd={addTodoItem}
+        onToggle={toggleTodoItem}
+        onDelete={deleteTodoItem}
+        onUpdate={updateTodoItem}
+      />
+
       <TaskModal 
         show={showModal}
         onClose={() => {
@@ -209,7 +238,26 @@ function App() {
           }
         }}
       />
+
+      <VoiceInputModal 
+        show={showVoiceInput}
+        onClose={() => setShowVoiceInput(false)}
+        currentDate={currentDate}
+        onTasksCreated={() => {
+          fetchTasks()
+        }}
+      />
+
     </div>
+  )
+}
+
+function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<Calendar />} />
+      <Route path="/report" element={<Report />} />
+    </Routes>
   )
 }
 

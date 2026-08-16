@@ -1,4 +1,5 @@
 import { getTasksForDate } from '../utils/dateUtils'
+import { formatTime12Hour } from '../utils/timeUtils'
 
 const DayView = ({ currentDate, tasks, onDayClick, onTaskClick }) => {
   const dayTasks = getTasksForDate(tasks, currentDate)
@@ -17,7 +18,7 @@ const DayView = ({ currentDate, tasks, onDayClick, onTaskClick }) => {
             onClick={() => onTaskClick(task)}
             style={{ backgroundColor: task.color || '#e3f2fd' }}
           >
-            <div className="task-time">{task.from_time} - {task.to_time}</div>
+            <div className="task-time">{formatTime12Hour(task.from_time)} - {formatTime12Hour(task.to_time)}</div>
             <div className="task-title">
               {task.title}
               {task.is_recurring && <span className="recurring-indicator">↻</span>}

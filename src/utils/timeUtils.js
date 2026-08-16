@@ -40,3 +40,10 @@ export const calculateEndTime = (startTime) => {
   const endHours = (hours + 1) % 24
   return `${endHours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`
 }
+
+export const formatTime12Hour = (time24) => {
+  const [hours, minutes] = time24.split(':').map(Number)
+  const displayHour = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours
+  const ampm = hours < 12 ? 'AM' : 'PM'
+  return `${displayHour}:${minutes.toString().padStart(2, '0')} ${ampm}`
+}
