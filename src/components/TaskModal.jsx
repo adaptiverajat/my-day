@@ -1,5 +1,44 @@
 import { useState, useEffect } from 'react'
 
+const formatDateInputValue = (date) => {
+  if (!date) return ''
+
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+
+  return `${year}-${month}-${day}`
+}
+
+const normalizeDateInputValue = (value) => {
+  if (!value) return ''
+
+  if (value instanceof Date) {
+    return formatDateInputValue(value)
+  }
+
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    if (!trimmed) return ''
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+      return trimmed
+    }
+
+    const datePart = trimmed.split('T')[0]
+    if (/^\d{4}-\d{2}-\d{2}$/.test(datePart)) {
+      return datePart
+    }
+
+    const parsed = new Date(trimmed)
+    if (!Number.isNaN(parsed.getTime())) {
+      return formatDateInputValue(parsed)
+    }
+  }
+
+  return ''
+}
+
 const TaskModal = ({ show, onClose, selectedDate, onSave, timeSlots, initialFromTime, initialToTime, editingTask, onDelete }) => {
   const [newTask, setNewTask] = useState({
     title: '',
@@ -11,6 +50,9 @@ const TaskModal = ({ show, onClose, selectedDate, onSave, timeSlots, initialFrom
     recurrence_end_date: '',
     color: '#e3f2fd'
   })
+  const [taskDate, setTaskDate] = useState(
+    () => normalizeDateInputValue(editingTask?.task_date || selectedDate) || formatDateInputValue(new Date())
+  )
 
   const [editMode, setEditMode] = useState('single') // 'single', 'all', 'future'
   const [deleteMode, setDeleteMode] = useState('single') // 'single', 'all', 'future'
@@ -23,6 +65,8 @@ const TaskModal = ({ show, onClose, selectedDate, onSave, timeSlots, initialFrom
         return time.substring(0, 5) // Remove seconds
       }
       
+      const taskDateValue = normalizeDateInputValue(editingTask.task_date || selectedDate) || formatDateInputValue(new Date())
+
       setNewTask({
         title: editingTask.title,
         description: editingTask.description,
@@ -33,6 +77,7 @@ const TaskModal = ({ show, onClose, selectedDate, onSave, timeSlots, initialFrom
         recurrence_end_date: editingTask.recurrence_end_date || '',
         color: editingTask.color || '#e3f2fd'
       })
+      setTaskDate(taskDateValue)
       setEditMode('single') // Reset edit mode when opening edit modal
       setDeleteMode('single') // Reset delete mode when opening edit modal
     } else {
@@ -46,14 +91,15 @@ const TaskModal = ({ show, onClose, selectedDate, onSave, timeSlots, initialFrom
         recurrence_end_date: '',
         color: '#e3f2fd'
       })
+      setTaskDate(formatDateInputValue(selectedDate || new Date()))
     }
-  }, [editingTask, initialFromTime, initialToTime, show])
+  }, [editingTask, initialFromTime, initialToTime, selectedDate, show])
 
   const handleSubmit = () => {
     if (newTask.title.trim()) {
       onSave({
         ...newTask,
-        task_date: selectedDate.toLocaleDateString('en-CA'),
+        task_date: taskDate,
         editMode: editMode
       })
       onClose()
@@ -74,7 +120,7 @@ const TaskModal = ({ show, onClose, selectedDate, onSave, timeSlots, initialFrom
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <h3>{editingTask ? 'Edit Task' : 'Add Task'} for {selectedDate?.toLocaleDateString()}</h3>
         
-        {editingTask && editingTask.is_recurring && (
+        {editingTask != 0 && editingTask.is_recurring !=0 && (
           <div className="form-group edit-mode-selection">
             <label>Edit Mode:</label>
             <div className="edit-mode-options">
@@ -100,7 +146,7 @@ const TaskModal = ({ show, onClose, selectedDate, onSave, timeSlots, initialFrom
           </div>
         )}
 
-        {editingTask && editingTask.is_recurring && (
+        {editingTask !=0 && editingTask.is_recurring !=0 && (
           <div className="form-group edit-mode-selection">
             <label>Delete Mode:</label>
             <div className="edit-mode-options">
@@ -130,8 +176,8 @@ const TaskModal = ({ show, onClose, selectedDate, onSave, timeSlots, initialFrom
           <label>Date:</label>
           <input
             type="date"
-            value={selectedDate?.toISOString().split('T')[0] || ''}
-            onChange={(e) => console.log('Date change:', e.target.value)}
+            value={taskDate}
+            onChange={(e) => setTaskDate(e.target.value)}
           />
         </div>
         <div className="form-group">
@@ -218,7 +264,7 @@ const TaskModal = ({ show, onClose, selectedDate, onSave, timeSlots, initialFrom
             />
           </div>
         </div>
-        {(!editingTask || (editingTask && editingTask.is_recurring)) && (
+        {(!editingTask || (editingTask !=0 && editingTask.is_recurring !=0)) && (
           <>
             <div className="form-group">
               <label>
@@ -265,7 +311,7 @@ const TaskModal = ({ show, onClose, selectedDate, onSave, timeSlots, initialFrom
           </>
         )}
         <div className="modal-buttons">
-          {editingTask && (
+          {editingTask !=0 && (
             <button className="btn-delete" onClick={handleDelete}>
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="3 6 5 6 21 6"></polyline>

@@ -1,3 +1,24 @@
+export const formatDateInputValue = (date) => {
+  if (!date) return ''
+
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+
+  return `${year}-${month}-${day}`
+}
+
+export const parseDateInputValue = (value) => {
+  if (!value) return new Date()
+
+  if (value instanceof Date) {
+    return new Date(value.getTime())
+  }
+
+  const [year, month, day] = value.split('-').map(Number)
+  return new Date(year, month - 1, day)
+}
+
 export const getWeekDays = (currentDate) => {
   const days = []
   const startOfWeek = new Date(currentDate)
@@ -55,8 +76,8 @@ export const getDateRange = (currentDate) => {
   endOfWeek.setDate(startOfWeek.getDate() + 6)
   
   return {
-    startDate: startOfWeek.toISOString().split('T')[0],
-    endDate: endOfWeek.toISOString().split('T')[0]
+    startDate: formatDateInputValue(startOfWeek),
+    endDate: formatDateInputValue(endOfWeek)
   }
 }
 
@@ -72,8 +93,8 @@ export const getCurrentRange = (currentDate) => {
   }
 
   return {
-    startDate: days[0].toISOString().split('T')[0],
-    endDate: days[days.length - 1].toISOString().split('T')[0],
+    startDate: formatDateInputValue(days[0]),
+    endDate: formatDateInputValue(days[days.length - 1]),
     days
   }
 }

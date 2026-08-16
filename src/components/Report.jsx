@@ -115,7 +115,7 @@ const Report = () => {
 
       // Calculate time statistics
       const timeStats = calculateTimeStats(reportTasks, currentView)
-      const dailyStatistics = calculateDailyStats(reportTasks, dateRange)
+      const dailyStatistics = calculateDailyStats(reportTasks, dateRange, healthHistory)
       
       setReportData({
         view: currentView,
@@ -218,10 +218,11 @@ const Report = () => {
     }
   }
 
-  const calculateDailyStats = (tasks, dateRange) => {
+  const calculateDailyStats = (tasks, dateRange, healthHistory = []) => {
     const MORNING_START = 6.5 * 60 // 6:30 AM in minutes = 390
-    const MORNING_END = 11.5 * 60 // 11:30 AM in minutes = 690
-    const WINDOW_DURATION = MORNING_END - MORNING_START // 300 minutes = 5 hours
+    const MORNING_END = 23.5 * 60 // 11:30 PM in minutes = 1410
+    const WINDOW_DURATION = MORNING_END - MORNING_START // 1020 minutes = 17 hours
+    const MEAL_TIME_MINUTES = 30 // 30 minutes per meal
     
     const stats = []
     
@@ -230,28 +231,70 @@ const Report = () => {
       
       const dayTasks = getTasksForDate(tasks, date)
       let busyMinutes = 0
+      const contributingTasks = []
       
       dayTasks.forEach(task => {
-        const [fromHours, fromMinutes] = task.from_time.split(':').map(Number)
-        const [toHours, toMinutes] = task.to_time.split(':').map(Number)
-        const taskStart = fromHours * 60 + fromMinutes
-        const taskEnd = toHours * 60 + toMinutes
-        
-        // Check if task overlaps with 6:30am to 11:30am window
-        if (taskEnd > MORNING_START && taskStart < MORNING_END) {
-          // Calculate overlap
-          const overlapStart = Math.max(taskStart, MORNING_START)
-          const overlapEnd = Math.min(taskEnd, MORNING_END)
-          busyMinutes += (overlapEnd - overlapStart)
+        try {
+          const [fromHours, fromMinutes] = task.from_time.split(':').map(Number)
+          const [toHours, toMinutes] = task.to_time.split(':').map(Number)
+          const taskStart = fromHours * 60 + fromMinutes
+          const taskEnd = toHours * 60 + toMinutes
+          
+          // Check if task overlaps with 6:30am to 11:30pm window
+          if (taskEnd > MORNING_START && taskStart < MORNING_END) {
+            // Calculate overlap
+            const overlapStart = Math.max(taskStart, MORNING_START)
+            const overlapEnd = Math.min(taskEnd, MORNING_END)
+            const overlapMinutes = overlapEnd - overlapStart
+            busyMinutes += overlapMinutes
+            
+            // Format time for display
+            const formatTime = (minutes) => {
+              const h = Math.floor(minutes / 60)
+              const m = minutes % 60
+              return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
+            }
+            
+            contributingTasks.push({
+              title: task.title,
+              startTime: formatTime(taskStart),
+              endTime: formatTime(taskEnd),
+              overlapMinutes
+            })
+          }
+        } catch (err) {
+          console.warn('Error parsing task time:', task, err)
         }
       })
       
-      const freeMinutes = Math.max(0, WINDOW_DURATION - busyMinutes)
+      // Get health data for this date
+      const dateString = date.toDateString()
+      const healthLog = healthHistory.find(log => new Date(log.date).toDateString() === dateString)
+      
+      let healthMinutes = 0
+      if (healthLog) {
+        // Add sleep time
+        if (healthLog.sleepDuration) {
+          healthMinutes += healthLog.sleepDuration * 60
+        }
+        // Add workout time
+        if (healthLog.workoutDuration) {
+          healthMinutes += healthLog.workoutDuration * 60
+        }
+        // Add meal time (30 mins per meal)
+        if (healthLog.meals && Array.isArray(healthLog.meals)) {
+          healthMinutes += healthLog.meals.length * MEAL_TIME_MINUTES
+        }
+      }
+      
+      const totalUsedMinutes = busyMinutes + healthMinutes
+      const freeMinutes = Math.max(0, WINDOW_DURATION - totalUsedMinutes)
       
       stats.push({
         date: date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
         busyHours: (busyMinutes / 60).toFixed(1),
-        freeHours: (freeMinutes / 60).toFixed(1)
+        freeHours: (freeMinutes / 60).toFixed(1),
+        contributingTasks
       })
     })
     
@@ -545,7 +588,7 @@ Individual tasks should show each task's hours.`
         </div>
 
         <div className="stats-section">
-          <h2>Daily Statistics (6:30 AM - 11:30 AM)</h2>
+          <h2>Daily Statistics (6:30 AM - 11:30 PM)</h2>
           <table className="stats-table">
             <thead>
               <tr>
@@ -558,7 +601,15 @@ Individual tasks should show each task's hours.`
               {dailyStats.map((stat, index) => (
                 <tr key={index}>
                   <td>{stat.date}</td>
-                  <td>{stat.busyHours}h</td>
+                  <td 
+                    className="busy-hours-cell"
+                    title={stat.contributingTasks.length > 0 
+                      ? stat.contributingTasks.map(t => `${t.title}: ${t.startTime}-${t.endTime} (${(t.overlapMinutes / 60).toFixed(1)}h)`).join('\n')
+                      : 'No tasks'
+                    }
+                  >
+                    {stat.busyHours}h
+                  </td>
                   <td>{stat.freeHours}h</td>
                 </tr>
               ))}

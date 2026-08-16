@@ -16,7 +16,7 @@ import { useCalendarTasks } from './hooks/useCalendarTasks'
 import { useTodoItems } from './hooks/useTodoItems'
 import { useTimeSlots } from './hooks/useTimeSlots'
 import { useCurrentTime } from './hooks/useCurrentTime'
-import { formatDateDisplay, formatMonthDisplay, formatYearDisplay, getCurrentRange, formatCurrentRangeDisplay } from './utils/dateUtils'
+import { formatDateDisplay, formatMonthDisplay, formatYearDisplay, getCurrentRange, formatCurrentRangeDisplay, parseDateInputValue } from './utils/dateUtils'
 import { calculateEndTime } from './utils/timeUtils'
 
 function Calendar() {
@@ -101,7 +101,7 @@ function Calendar() {
   }
 
   const handleTaskClick = (task) => {
-    setSelectedDate(new Date(task.task_date))
+    setSelectedDate(parseDateInputValue(task.task_date))
     setEditingTask(task)
     setInitialFromTime(task.from_time)
     setInitialToTime(task.to_time)

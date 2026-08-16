@@ -1114,6 +1114,12 @@ body {
   border-bottom: none;
 }
 
+.busy-hours-cell {
+  cursor: help;
+  border-bottom: 1px dotted #666;
+  position: relative;
+}
+
 .summary-section {
   margin-bottom: 30px;
 }

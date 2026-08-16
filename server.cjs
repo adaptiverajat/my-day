@@ -5,6 +5,19 @@ const cors = require('cors');
 const app = express();
 const port = 3001;
 
+const parseLocalDate = (value) => {
+  if (!value) return null;
+
+  const dateString = typeof value === 'string' && value.includes('T') ? value.split('T')[0] : value;
+  const [year, month, day] = dateString.split('-').map(Number);
+
+  if (!year || !month || !day) {
+    return new Date(value);
+  }
+
+  return new Date(year, month - 1, day);
+};
+
 app.use(cors());
 app.use(express.json());
 
@@ -211,7 +224,7 @@ app.post('/api/calendar-tasks', async (req, res) => {
       console.log('Creating recurring tasks with type:', recurrence_type);
       // Create recurring tasks
       const createdTasks = [];
-      const endDate = formattedRecurrenceEndDate ? new Date(formattedRecurrenceEndDate) : new Date();
+      const endDate = formattedRecurrenceEndDate ? parseLocalDate(formattedRecurrenceEndDate) : new Date();
 
       // Only add 12 months if no end date is provided
       if (!formattedRecurrenceEndDate) {
@@ -220,7 +233,7 @@ app.post('/api/calendar-tasks', async (req, res) => {
 
       console.log('End date for recurrence:', endDate.toISOString().split('T')[0]);
 
-      let currentDate = new Date(task_date);
+      let currentDate = parseLocalDate(task_date);
       const maxTasks = 365; // Safety limit to prevent infinite loops
       let taskCount = 0;
 
@@ -363,14 +376,14 @@ app.put('/api/calendar-tasks/:id', async (req, res) => {
         
         // Create new recurring series with new pattern
         const createdTasks = [];
-        const endDate = recurrence_end_date ? new Date(recurrence_end_date) : new Date();
+        const endDate = recurrence_end_date ? parseLocalDate(recurrence_end_date) : new Date();
         
         // Only add 12 months if no end date is provided
         if (!recurrence_end_date) {
           endDate.setMonth(endDate.getMonth() + 12);
         }
         
-        let currentDate = new Date(task_date);
+        let currentDate = parseLocalDate(task_date);
         const maxTasks = 365;
         let taskCount = 0;
         
