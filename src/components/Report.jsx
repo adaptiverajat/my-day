@@ -37,11 +37,27 @@ const Report = () => {
   const [aiCategories, setAiCategories] = useState(null)
   const [dailyStats, setDailyStats] = useState([])
   const [showHealthModal, setShowHealthModal] = useState(false)
-  const [healthHistory, setHealthHistory] = useState(() => {
-    // Try to load health history from localStorage
-    const saved = localStorage.getItem('healthHistory')
-    return saved ? JSON.parse(saved) : []
-  })
+  const [healthHistory, setHealthHistory] = useState([])
+
+  useEffect(() => {
+    const fetchHealthHistory = async () => {
+      try {
+        const response = await fetch('http://localhost:3001/api/health-logs')
+        const data = await response.json()
+
+        if (data.success) {
+          setHealthHistory(data.logs || [])
+        } else {
+          setHealthHistory([])
+        }
+      } catch (err) {
+        console.error('Failed to fetch health history:', err)
+        setHealthHistory([])
+      }
+    }
+
+    fetchHealthHistory()
+  }, [])
 
   // Get data from navigation state or use defaults
   const currentDate = location.state?.currentDate || new Date()
@@ -141,29 +157,50 @@ const Report = () => {
     return healthHistory.some(log => new Date(log.date).toDateString() === today)
   }
 
-  const handleHealthLogSubmit = (logData) => {
-    // Check if there's already a log for this date and update it
-    const dateString = new Date(logData.date).toDateString()
-    const existingIndex = healthHistory.findIndex(
-      log => new Date(log.date).toDateString() === dateString
-    )
+  const handleHealthLogSubmit = async (logData) => {
+    try {
+      const response = await fetch('http://localhost:3001/api/health-logs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          date: logData.date,
+          sleepTime: logData.sleepTime,
+          sleepDuration: logData.sleepDuration,
+          workoutTime: logData.workoutTime,
+          workoutDuration: logData.workoutDuration,
+          meals: logData.meals
+        })
+      })
 
-    let updatedHistory
-    if (existingIndex >= 0) {
-      updatedHistory = [...healthHistory]
-      updatedHistory[existingIndex] = logData
-    } else {
-      updatedHistory = [...healthHistory, logData]
+      const data = await response.json()
+      if (!data.success) {
+        throw new Error(data.message || 'Failed to save health log')
+      }
+
+      const savedLog = data.log
+      const dateString = new Date(savedLog.date).toDateString()
+      const existingIndex = healthHistory.findIndex(
+        log => new Date(log.date).toDateString() === dateString
+      )
+
+      let updatedHistory
+      if (existingIndex >= 0) {
+        updatedHistory = [...healthHistory]
+        updatedHistory[existingIndex] = savedLog
+      } else {
+        updatedHistory = [...healthHistory, savedLog]
+      }
+
+      if (updatedHistory.length > 60) {
+        updatedHistory = updatedHistory.slice(-60)
+      }
+
+      setHealthHistory(updatedHistory)
+      setShowHealthModal(false)
+    } catch (err) {
+      console.error('Failed to save health log:', err)
+      setError('Failed to save health log: ' + err.message)
     }
-
-    // Keep only last 60 days of history
-    if (updatedHistory.length > 60) {
-      updatedHistory = updatedHistory.slice(-60)
-    }
-
-    setHealthHistory(updatedHistory)
-    localStorage.setItem('healthHistory', JSON.stringify(updatedHistory))
-    setShowHealthModal(false)
   }
 
   const calculateTimeStats = (tasks, view) => {

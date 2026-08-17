@@ -9,6 +9,10 @@ const HealthAssessmentModal = ({ onClose, onSubmit, date }) => {
   const [meals, setMeals] = useState([])
   const [currentMealTime, setCurrentMealTime] = useState('')
   const [currentMealDetail, setCurrentMealDetail] = useState('')
+  const [healthText, setHealthText] = useState('')
+  const [aiSuggestion, setAiSuggestion] = useState(null)
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiError, setAiError] = useState('')
   const [errors, setErrors] = useState({})
 
   const getFormattedDate = (dateString) => {
@@ -35,6 +39,100 @@ const HealthAssessmentModal = ({ onClose, onSubmit, date }) => {
 
   const handleRemoveMeal = (index) => {
     setMeals(meals.filter((_, i) => i !== index))
+  }
+
+  const applyParsedSuggestion = (parsed) => {
+    if (!parsed) return
+
+    setSleepTime(parsed.sleepTime || '')
+    setSleepDuration(parsed.sleepDuration ? String(parsed.sleepDuration) : '')
+    setWorkoutTime(parsed.workoutTime || '')
+    setWorkoutDuration(parsed.workoutDuration ? String(parsed.workoutDuration) : '')
+
+    if (Array.isArray(parsed.meals) && parsed.meals.length > 0) {
+      setMeals(parsed.meals)
+    }
+
+    setAiSuggestion(parsed.summary || 'Parsed from your note. Review and adjust before saving.')
+    setAiError('')
+  }
+
+  const handleParseHealthText = async () => {
+    if (!healthText.trim()) {
+      setAiError('Please enter a quick health note first.')
+      return
+    }
+
+    setAiLoading(true)
+    setAiError('')
+
+    try {
+      const apiKey = import.meta.env.VITE_OPENAI_API_KEY
+      if (!apiKey) {
+        setAiError('OpenAI API key not found in .env file')
+        return
+      }
+
+      const prompt = `Extract a daily health log from this plain-language note. Use the current date if not specified. Return ONLY valid JSON with this exact shape:
+{
+  "sleepTime": "11:00 PM",
+  "sleepDuration": 7.5,
+  "workoutTime": "6:00 AM",
+  "workoutDuration": 1,
+  "meals": [
+    { "time": "8:00 AM", "detail": "Oatmeal with berries" },
+    { "time": "1:00 PM", "detail": "Chicken salad" }
+  ],
+  "summary": "Short human-readable summary"
+}
+
+Use strings like 'none' for no workout and leave workoutDuration to 0 if there is no workout.
+If there are multiple meals, include each as an object with time and detail.
+If a value is not mentioned, use null or empty string where appropriate.
+Date to log: ${selectedDate}
+
+User note:
+${healthText}`
+
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: 'gpt-3.5-turbo',
+          messages: [
+            { role: 'system', content: 'You convert plain-language daily wellness notes into structured JSON.' },
+            { role: 'user', content: prompt }
+          ],
+          max_tokens: 800,
+          temperature: 0.2
+        })
+      })
+
+      const data = await response.json()
+      if (data.error) {
+        throw new Error(data.error.message)
+      }
+
+      const content = data.choices?.[0]?.message?.content
+      if (!content) {
+        throw new Error('No AI response received')
+      }
+
+      const jsonMatch = content.match(/\{[\s\S]*\}/)
+      if (!jsonMatch) {
+        throw new Error('AI response was not valid JSON')
+      }
+
+      const parsed = JSON.parse(jsonMatch[0])
+      applyParsedSuggestion(parsed)
+    } catch (err) {
+      setAiError('Unable to parse that note: ' + err.message)
+    } finally {
+      setAiLoading(false)
+    }
   }
 
   const handleSubmit = (e) => {
@@ -96,6 +194,41 @@ const HealthAssessmentModal = ({ onClose, onSubmit, date }) => {
                 />
                 <p className="date-display">Logging for: <strong>{getFormattedDate(selectedDate)}</strong></p>
               </div>
+            </div>
+
+            <div className="form-section plain-language-section">
+              <h4>📝 Quick Health Note</h4>
+              <div className="form-group">
+                <label htmlFor="healthText">Describe your day in plain language</label>
+                <textarea
+                  id="healthText"
+                  value={healthText}
+                  onChange={(e) => setHealthText(e.target.value)}
+                  placeholder="Example: I slept at 11:30 PM for 7.5 hours, did a 45 minute workout at 6:00 AM, ate oatmeal at 8 AM and chicken salad at 1 PM."
+                  rows={4}
+                  className="health-ai-textarea"
+                />
+              </div>
+
+              <div className="ai-action-row">
+                <button type="button" className="btn-ai-parse" onClick={handleParseHealthText} disabled={aiLoading}>
+                  {aiLoading ? 'Parsing...' : 'Parse with AI'}
+                </button>
+                {healthText && (
+                  <button type="button" className="btn-clear-ai" onClick={() => { setHealthText(''); setAiSuggestion(null); setAiError('') }}>
+                    Clear
+                  </button>
+                )}
+              </div>
+
+              {aiError && <span className="error-text">{aiError}</span>}
+
+              {aiSuggestion && (
+                <div className="ai-suggestion-box">
+                  <strong>AI understood:</strong>
+                  <p>{aiSuggestion}</p>
+                </div>
+              )}
             </div>
 
             <div className="form-section">
