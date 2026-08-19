@@ -41,7 +41,10 @@ function Calendar() {
 
   const { todoItems, addTodoItem, toggleTodoItem, deleteTodoItem, updateTodoItem } = useTodoItems()
   const timeSlots = useTimeSlots()
-  const currentTime = useCurrentTime()
+  const currentTime = useCurrentTime(() => {
+    // Refresh page at midnight
+    window.location.reload()
+  })
 
   const setupDatabase = async () => {
     try {
@@ -135,6 +138,9 @@ function Calendar() {
         <CalendarHeader />
         <ViewControls currentView={currentView} setCurrentView={setCurrentView} setCurrentDate={setCurrentDate} viewDensity={viewDensity} setViewDensity={setViewDensity} onReportClick={() => navigate('/report', { state: { currentDate, currentView } })} onVoiceInputClick={() => setShowVoiceInput(true)} onHelpClick={() => setShowHelp(true)} />
         <div className="date-display">
+          <div className="digital-clock">
+            {currentTime.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+          </div>
           {currentView === 'week' && (
             <>
               <button className="nav-btn" onClick={() => navigateWeek(-1)}>←</button>

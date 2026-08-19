@@ -5,6 +5,7 @@ const VoiceInputModal = ({ show, onClose, currentDate, onTasksCreated }) => {
   const [parsedTasks, setParsedTasks] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [icsFile, setIcsFile] = useState(null)
 
   const handleParse = async () => {
     if (!input.trim()) {
@@ -122,6 +123,7 @@ Guidelines:
       onClose()
       setInput('')
       setParsedTasks(null)
+      setIcsFile(null)
     } catch (err) {
       setError('Failed to create tasks: ' + err.message)
     }
@@ -131,7 +133,161 @@ Guidelines:
     setInput('')
     setParsedTasks(null)
     setError(null)
+    setIcsFile(null)
     onClose()
+  }
+
+  const handleFileSelect = (event) => {
+    const file = event.target.files[0]
+    if (file && file.name.endsWith('.ics')) {
+      setIcsFile(file)
+      setError(null)
+    } else {
+      setError('Please select a valid .ics file')
+    }
+  }
+
+  const parseICSFile = (icsContent) => {
+    const events = []
+    const lines = icsContent.split('\n')
+    let currentEvent = null
+    let inEvent = false
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim()
+      
+      if (line === 'BEGIN:VEVENT') {
+        inEvent = true
+        currentEvent = {}
+      } else if (line === 'END:VEVENT') {
+        if (currentEvent && currentEvent.summary && currentEvent.dtstart) {
+          events.push(currentEvent)
+        }
+        inEvent = false
+        currentEvent = null
+      } else if (inEvent && currentEvent) {
+        if (line.startsWith('SUMMARY:')) {
+          currentEvent.summary = line.substring(8)
+        } else if (line.startsWith('DESCRIPTION:')) {
+          currentEvent.description = line.substring(12)
+        } else if (line.startsWith('DTSTART:')) {
+          currentEvent.dtstart = line.substring(8)
+        } else if (line.startsWith('DTEND:')) {
+          currentEvent.dtend = line.substring(6)
+        } else if (line.startsWith('DTSTART;')) {
+          // Handle DTSTART with parameters (like TZID)
+          const parts = line.split(':')
+          if (parts.length > 1) {
+            currentEvent.dtstart = parts[1]
+          }
+        } else if (line.startsWith('DTEND;')) {
+          // Handle DTEND with parameters (like TZID)
+          const parts = line.split(':')
+          if (parts.length > 1) {
+            currentEvent.dtend = parts[1]
+          }
+        }
+      }
+    }
+
+    return events
+  }
+
+  const formatICSDate = (icsDate) => {
+    // ICS format: YYYYMMDDTHHMMSS or YYYYMMDD
+    if (icsDate.includes('T')) {
+      // Format with time: YYYYMMDDTHHMMSS
+      const datePart = icsDate.substring(0, 8)
+      const timePart = icsDate.substring(9, 15)
+      
+      const year = datePart.substring(0, 4)
+      const month = datePart.substring(4, 6)
+      const day = datePart.substring(6, 8)
+      const hour = timePart.substring(0, 2)
+      const minute = timePart.substring(2, 4)
+      
+      return {
+        date: `${year}-${month}-${day}`,
+        time: `${hour}:${minute}`
+      }
+    } else {
+      // Format without time: YYYYMMDD
+      const year = icsDate.substring(0, 4)
+      const month = icsDate.substring(4, 6)
+      const day = icsDate.substring(6, 8)
+      
+      return {
+        date: `${year}-${month}-${day}`,
+        time: '09:00' // Default time
+      }
+    }
+  }
+
+  const handleICSImport = async () => {
+    if (!icsFile) {
+      setError('Please select an .ics file first')
+      return
+    }
+
+    setLoading(true)
+    setError(null)
+
+    try {
+      const reader = new FileReader()
+      reader.onload = async (e) => {
+        try {
+          const icsContent = e.target.result
+          const events = parseICSFile(icsContent)
+          
+          if (events.length === 0) {
+            setError('No events found in the ICS file')
+            setLoading(false)
+            return
+          }
+
+          const tasks = events.map(event => {
+            const startData = formatICSDate(event.dtstart)
+            const endData = event.dtend ? formatICSDate(event.dtend) : null
+            
+            // Calculate end time (default to 1 hour if not specified)
+            let endTime = '10:00'
+            if (endData && endData.time) {
+              endTime = endData.time
+            } else {
+              // Parse start time and add 1 hour
+              const [startHour, startMin] = startData.time.split(':')
+              const endHour = (parseInt(startHour) + 1).toString().padStart(2, '0')
+              endTime = `${endHour}:${startMin}`
+            }
+
+            return {
+              title: event.summary || 'Meeting',
+              description: event.description || '',
+              date: startData.date,
+              from_time: startData.time,
+              to_time: endTime,
+              color: '#e3f2fd'
+            }
+          })
+
+          setParsedTasks(tasks)
+          setLoading(false)
+        } catch (parseError) {
+          setError('Failed to parse ICS file: ' + parseError.message)
+          setLoading(false)
+        }
+      }
+      
+      reader.onerror = () => {
+        setError('Failed to read file')
+        setLoading(false)
+      }
+      
+      reader.readAsText(icsFile)
+    } catch (err) {
+      setError('Failed to import ICS file: ' + err.message)
+      setLoading(false)
+    }
   }
 
   if (!show) return null
@@ -150,6 +306,27 @@ Guidelines:
             rows={4}
             className="voice-input-textarea"
           />
+        </div>
+
+        <div className="ics-import-section">
+          <div className="form-group">
+            <label>Or import meetings from .ICS file:</label>
+            <input
+              type="file"
+              accept=".ics"
+              onChange={handleFileSelect}
+              className="ics-file-input"
+            />
+          </div>
+          {icsFile && (
+            <button 
+              className="btn-import-ics" 
+              onClick={handleICSImport}
+              disabled={loading}
+            >
+              {loading ? 'Importing...' : 'Import ICS File'}
+            </button>
+          )}
         </div>
 
         {!parsedTasks && (
