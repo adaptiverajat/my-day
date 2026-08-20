@@ -7,6 +7,7 @@ import TodoList from './components/TodoList'
 import TaskModal from './components/TaskModal'
 import VoiceInputModal from './components/VoiceInputModal'
 import HelpModal from './components/HelpModal'
+import ScreensaverModal from './components/ScreensaverModal'
 import WeekView from './components/WeekView'
 import DayView from './components/DayView'
 import MonthView from './components/MonthView'
@@ -31,6 +32,7 @@ function Calendar() {
   const [viewDensity, setViewDensity] = useState(1) // 0: normal, 1: minimal, 2: ultra minimal
   const [showVoiceInput, setShowVoiceInput] = useState(false)
   const [showHelp, setShowHelp] = useState(false)
+  const [showScreensaver, setShowScreensaver] = useState(false)
   
   // Derive flags from slider value
   const minimalView = viewDensity >= 1
@@ -56,6 +58,40 @@ function Calendar() {
 
   useEffect(() => {
     setupDatabase()
+  }, [])
+
+  // Idle detection for screensaver
+  useEffect(() => {
+    let timeoutId
+
+    const resetIdleTimer = () => {
+      clearTimeout(timeoutId)
+      timeoutId = setTimeout(() => {
+        setShowScreensaver(true)
+      }, 60000) // 60 seconds
+    }
+
+    const handleActivity = () => {
+      resetIdleTimer()
+      setShowScreensaver(false)
+    }
+
+    // Initial setup
+    resetIdleTimer()
+
+    // Track mouse movement and keyboard events
+    window.addEventListener('mousemove', handleActivity)
+    window.addEventListener('keypress', handleActivity)
+    window.addEventListener('click', handleActivity)
+    window.addEventListener('scroll', handleActivity)
+
+    return () => {
+      window.removeEventListener('mousemove', handleActivity)
+      window.removeEventListener('keypress', handleActivity)
+      window.removeEventListener('click', handleActivity)
+      window.removeEventListener('scroll', handleActivity)
+      clearTimeout(timeoutId)
+    }
   }, [])
 
   const navigateWeek = (direction) => {
@@ -258,6 +294,12 @@ function Calendar() {
       />
 
       {showHelp && <HelpModal onClose={() => setShowHelp(false)} />}
+
+      <ScreensaverModal 
+        show={showScreensaver}
+        tasks={tasks}
+        currentDate={currentDate}
+      />
 
     </div>
   )

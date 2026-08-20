@@ -1357,6 +1357,160 @@ body {
   font-size: 12px;
 }
 
+/* Screensaver Modal Styles */
+.screensaver-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.screensaver-content {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  color: white;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.screensaver-time {
+  height: 40%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 16vw;
+  font-weight: 700;
+  font-family: 'Courier New', monospace;
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+  letter-spacing: 0.05em;
+}
+
+.screensaver-date {
+  height: 20%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 8vw;
+  font-weight: 400;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+  opacity: 0.9;
+}
+
+.screensaver-tasks {
+  height: 40%;
+  display: flex;
+  justify-content: space-around;
+  margin-top: 5vh;
+  align-items: flex-start;
+  padding: 1vh 3vw;
+  gap: 1.5vw;
+}
+
+.task-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 1vh 0.8vw;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  max-height: 100%;
+  overflow: hidden;
+}
+
+.task-header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1vh;
+  padding: 0 0.5vw;
+}
+
+.task-column h3 {
+  margin: 0;
+  font-size: 1.2vw;
+  font-weight: 600;
+  color: #e0e0e0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.task-date {
+  font-size: 1.2vw;
+  color: #a0a0a0;
+  opacity: 0.8;
+}
+
+.task-list {
+  flex: 1;
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2vh;
+}
+
+.task-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.3vh 0.5vw;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+  border-left: 2px solid #4facfe;
+  transition: background 0.2s ease;
+}
+
+.task-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.task-time {
+  font-size: 0.8vw;
+  font-weight: 600;
+  color: #4facfe;
+  white-space: nowrap;
+}
+
+.task-title {
+  font-size: 0.75vw;
+  color: #e0e0e0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: right;
+  flex: 1;
+  margin-left: 0.5vw;
+}
+
+.no-tasks {
+  font-size: 0.7vw;
+  color: #808080;
+  text-align: center;
+  padding: 1vh 0;
+  font-style: italic;
+}
+
 .tooltip-tasks-title {
   margin: 8px 0 4px 0;
   font-weight: 600;
