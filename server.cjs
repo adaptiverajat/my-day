@@ -60,7 +60,7 @@ app.use(express.json());
 const dbConfig = {
   host: 'localhost',
   user: 'root',
-  password: 'aX$Eq16k',
+  password: 'root',
   database: 'my_day',
   connectionLimit: 5,
   waitForConnections: true,
@@ -74,7 +74,7 @@ const dbConfig = {
 const poolWithoutDB = mysql.createPool({
   host: 'localhost',
   user: 'root',
-  password: 'aX$Eq16k',
+  password: 'root',
   connectionLimit: 3,
   waitForConnections: true,
   queueLimit: 0,
