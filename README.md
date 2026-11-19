@@ -1,16 +1,11 @@
-# React + Vite
+# My Day
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+A React + Vite calendar app with an Express API and MySQL database.
 
-Currently, two official plugins are available:
+## Run locally
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+1. Copy `.env.example` to `.env` and set `DB_PASSWORD` to the password for your local MySQL user. Set `DB_USER`, `DB_HOST`, and `DB_PORT` too if your MySQL setup differs from the defaults. The MySQL user needs permission to create the `my_day` database and its tables.
+2. In one terminal, run `npm run server` to start the API on port 3001.
+3. In a second terminal, run `npm run dev` to start the Vite frontend.
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+The frontend initializes the database schema when the API is available. To check MySQL access directly, open `http://localhost:3001/api/test-connection`; a successful response reports `MySQL connection successful`. Schema setup is available at `http://localhost:3001/api/setup-database`.

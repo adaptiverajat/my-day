@@ -1,9 +1,24 @@
 const express = require('express');
 const mysql = require('mysql2/promise');
 const cors = require('cors');
+const path = require('path');
+const fs = require('fs');
+const { extractFromPdfBuffer } = require('./invoiceParser.cjs');
+require('dotenv').config();
 
 const app = express();
-const port = 3001;
+const port = Number(process.env.API_PORT || 3001);
+const databaseName = process.env.DB_NAME || 'my_day';
+
+// Ensure uploads directory exists permanently
+const uploadsDir = path.join(__dirname, 'public', 'uploads', 'invoices');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+if (!/^[A-Za-z0-9_]+$/.test(databaseName)) {
+  throw new Error('DB_NAME may contain only letters, numbers, and underscores');
+}
 
 const formatDateOnly = (value) => {
   if (!value) return '';
@@ -54,14 +69,17 @@ const parseLocalDate = (value) => {
 };
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
 
 // MySQL connection configuration
 const dbConfig = {
-  host: 'localhost',
-  user: 'root',
-  password: 'root',
-  database: 'my_day',
+  host: process.env.DB_HOST || 'localhost',
+  port: Number(process.env.DB_PORT || 3306),
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || 'aX$Eq16k',
+  database: databaseName,
   connectionLimit: 5,
   waitForConnections: true,
   queueLimit: 0,
@@ -72,9 +90,10 @@ const dbConfig = {
 
 // Create MySQL connection pool (without database initially)
 const poolWithoutDB = mysql.createPool({
-  host: 'localhost',
-  user: 'root',
-  password: 'root',
+  host: dbConfig.host,
+  port: dbConfig.port,
+  user: dbConfig.user,
+  password: dbConfig.password,
   connectionLimit: 3,
   waitForConnections: true,
   queueLimit: 0,
@@ -99,109 +118,279 @@ app.get('/api/test-connection', async (req, res) => {
   }
 });
 
-// Create database if it doesn't exist
+// Ensure JivanDisha locations and invoices tables exist
+const ensureJivanDishaTable = async () => {
+  if (!pool) return;
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS jivandisha_locations (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      country VARCHAR(10) NOT NULL,
+      title VARCHAR(255) NOT NULL,
+      category VARCHAR(50) DEFAULT 'General',
+      lat DECIMAL(10, 7) NOT NULL,
+      lng DECIMAL(10, 7) NOT NULL,
+      city VARCHAR(100) NULL,
+      state VARCHAR(100) NULL,
+      address VARCHAR(255) NULL,
+      notes TEXT NULL,
+      books_sent INT DEFAULT 0,
+      invoice_date DATE NULL,
+      payment_received BOOLEAN DEFAULT FALSE,
+      decision_maker_name VARCHAR(150) NULL,
+      decision_maker_phone VARCHAR(50) NULL,
+      inventory_keeper_name VARCHAR(150) NULL,
+      inventory_keeper_phone VARCHAR(50) NULL,
+      invoice_pdf_url VARCHAR(500) NULL,
+      invoice_pdf_name VARCHAR(255) NULL,
+      contact_person VARCHAR(150) NULL,
+      contact_phone VARCHAR(50) NULL,
+      contact_email VARCHAR(150) NULL,
+      website VARCHAR(255) NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    )
+  `);
+
+  // Ensure jivandisha_invoices table exists
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS jivandisha_invoices (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      location_id INT NOT NULL,
+      invoice_number VARCHAR(100) NULL,
+      invoice_date DATE NOT NULL,
+      books_sent INT DEFAULT 0,
+      amount DECIMAL(10, 2) NULL,
+      payment_received BOOLEAN DEFAULT FALSE,
+      pdf_url VARCHAR(500) NULL,
+      pdf_name VARCHAR(255) NULL,
+      notes TEXT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      INDEX idx_location_id (location_id)
+    )
+  `);
+
+  try {
+    await pool.query('ALTER TABLE jivandisha_locations ADD COLUMN books_sent INT DEFAULT 0');
+  } catch (error) {
+    if (!error.message.includes('Duplicate column')) {
+      console.log('Error adding books_sent column:', error.message);
+    }
+  }
+
+  try {
+    await pool.query('ALTER TABLE jivandisha_locations ADD COLUMN invoice_date DATE NULL');
+  } catch (error) {
+    if (!error.message.includes('Duplicate column')) {
+      console.log('Error adding invoice_date column:', error.message);
+    }
+  }
+
+  try {
+    await pool.query('ALTER TABLE jivandisha_locations ADD COLUMN payment_received BOOLEAN DEFAULT FALSE');
+  } catch (error) {
+    if (!error.message.includes('Duplicate column')) {
+      console.log('Error adding payment_received column:', error.message);
+    }
+  }
+
+  try {
+    await pool.query('ALTER TABLE jivandisha_locations ADD COLUMN decision_maker_name VARCHAR(150) NULL');
+  } catch (error) {
+    if (!error.message.includes('Duplicate column')) {
+      console.log('Error adding decision_maker_name column:', error.message);
+    }
+  }
+
+  try {
+    await pool.query('ALTER TABLE jivandisha_locations ADD COLUMN decision_maker_phone VARCHAR(50) NULL');
+  } catch (error) {
+    if (!error.message.includes('Duplicate column')) {
+      console.log('Error adding decision_maker_phone column:', error.message);
+    }
+  }
+
+  try {
+    await pool.query('ALTER TABLE jivandisha_locations ADD COLUMN inventory_keeper_name VARCHAR(150) NULL');
+  } catch (error) {
+    if (!error.message.includes('Duplicate column')) {
+      console.log('Error adding inventory_keeper_name column:', error.message);
+    }
+  }
+
+  try {
+    await pool.query('ALTER TABLE jivandisha_locations ADD COLUMN inventory_keeper_phone VARCHAR(50) NULL');
+  } catch (error) {
+    if (!error.message.includes('Duplicate column')) {
+      console.log('Error adding inventory_keeper_phone column:', error.message);
+    }
+  }
+
+  try {
+    await pool.query('ALTER TABLE jivandisha_locations ADD COLUMN invoice_pdf_url VARCHAR(500) NULL');
+  } catch (error) {
+    if (!error.message.includes('Duplicate column')) {
+      console.log('Error adding invoice_pdf_url column:', error.message);
+    }
+  }
+
+  try {
+    await pool.query('ALTER TABLE jivandisha_locations ADD COLUMN invoice_pdf_name VARCHAR(255) NULL');
+  } catch (error) {
+    if (!error.message.includes('Duplicate column')) {
+      console.log('Error adding invoice_pdf_name column:', error.message);
+    }
+  }
+
+  try {
+    await pool.query('ALTER TABLE jivandisha_invoices ADD COLUMN pdf_url VARCHAR(500) NULL');
+  } catch (error) {
+    if (!error.message.includes('Duplicate column')) {
+      console.log('Error adding pdf_url column to invoices:', error.message);
+    }
+  }
+
+  try {
+    await pool.query('ALTER TABLE jivandisha_invoices ADD COLUMN pdf_name VARCHAR(255) NULL');
+  } catch (error) {
+    if (!error.message.includes('Duplicate column')) {
+      console.log('Error adding pdf_name column to invoices:', error.message);
+    }
+  }
+};
+
+// Set up all database tables and schema migrations
+const setupAllTables = async () => {
+  if (!pool) return;
+
+  // Create calendar tasks table
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS calendar_tasks (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      title VARCHAR(255) NOT NULL,
+      description TEXT,
+      task_date DATE NOT NULL,
+      from_time TIME NOT NULL,
+      to_time TIME NOT NULL,
+      is_recurring BOOLEAN DEFAULT FALSE,
+      recurrence_type VARCHAR(20) DEFAULT 'none',
+      recurrence_end_date DATE NULL,
+      parent_task_id INT NULL,
+      color VARCHAR(7) DEFAULT '#e3f2fd',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // Add new columns if table already exists (MySQL-compatible approach)
+  try {
+    await pool.query('ALTER TABLE calendar_tasks ADD COLUMN is_recurring BOOLEAN DEFAULT FALSE');
+  } catch (error) {
+    if (!error.message.includes('Duplicate column')) {
+      console.log('Error adding is_recurring column:', error.message);
+    }
+  }
+  try {
+    await pool.query('ALTER TABLE calendar_tasks ADD COLUMN recurrence_type VARCHAR(20) DEFAULT "none"');
+  } catch (error) {
+    if (!error.message.includes('Duplicate column')) {
+      console.log('Error adding recurrence_type column:', error.message);
+    }
+  }
+  try {
+    await pool.query('ALTER TABLE calendar_tasks ADD COLUMN recurrence_end_date DATE NULL');
+  } catch (error) {
+    if (!error.message.includes('Duplicate column')) {
+      console.log('Error adding recurrence_end_date column:', error.message);
+    }
+  }
+  try {
+    await pool.query('ALTER TABLE calendar_tasks ADD COLUMN parent_task_id INT NULL');
+  } catch (error) {
+    if (!error.message.includes('Duplicate column')) {
+      console.log('Error adding parent_task_id column:', error.message);
+    }
+  }
+  try {
+    await pool.query('ALTER TABLE calendar_tasks ADD COLUMN color VARCHAR(7) DEFAULT "#e3f2fd"');
+  } catch (error) {
+    if (!error.message.includes('Duplicate column')) {
+      console.log('Error adding color column:', error.message);
+    }
+  }
+
+  // Create todo items table
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS todo_items (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      title VARCHAR(255) NOT NULL,
+      completed BOOLEAN DEFAULT FALSE,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // Create health logs table
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS health_logs (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      log_date DATE NOT NULL UNIQUE,
+      sleep_time VARCHAR(50) NOT NULL,
+      sleep_duration DECIMAL(4,2) NOT NULL,
+      workout_time VARCHAR(50) NULL,
+      workout_duration DECIMAL(4,2) DEFAULT 0,
+      meals JSON NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    )
+  `);
+
+  // Create JivanDisha locations & invoices tables
+  await ensureJivanDishaTable();
+};
+
+// Initialize database connection pool automatically
+const initDatabase = async () => {
+  if (pool) {
+    await ensureJivanDishaTable();
+    return pool;
+  }
+
+  try {
+    const connection = await poolWithoutDB.getConnection();
+    await connection.query(`CREATE DATABASE IF NOT EXISTS \`${databaseName}\``);
+    connection.release();
+
+    pool = mysql.createPool(dbConfig);
+    console.log('MySQL Database pool connected successfully');
+
+    await setupAllTables();
+    return pool;
+  } catch (error) {
+    console.error('MySQL Database auto-initialization error:', error.message);
+    return null;
+  }
+};
+
+// Create database endpoint (for compatibility with existing frontend calls)
 app.get('/api/setup-database', async (req, res) => {
   try {
-    if (pool) {
-      return res.json({ success: true, message: 'Database already initialized' });
+    const currentPool = await initDatabase();
+    if (!currentPool) {
+      return res.status(500).json({ success: false, message: 'Database setup failed to connect to MySQL' });
     }
-    
-    const connection = await poolWithoutDB.getConnection();
-    
-    // Create database if not exists
-    await connection.query('CREATE DATABASE IF NOT EXISTS my_day');
-    
-    connection.release();
-    
-    // Create pool with database
-    pool = mysql.createPool(dbConfig);
-
-    console.log('Database initialized successfully');
-    
-    // Create calendar tasks table
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS calendar_tasks (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        title VARCHAR(255) NOT NULL,
-        description TEXT,
-        task_date DATE NOT NULL,
-        from_time TIME NOT NULL,
-        to_time TIME NOT NULL,
-        is_recurring BOOLEAN DEFAULT FALSE,
-        recurrence_type VARCHAR(20) DEFAULT 'none',
-        recurrence_end_date DATE NULL,
-        parent_task_id INT NULL,
-        color VARCHAR(7) DEFAULT '#e3f2fd',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-
-    // Add new columns if table already exists (MySQL-compatible approach)
-    try {
-      await pool.query('ALTER TABLE calendar_tasks ADD COLUMN is_recurring BOOLEAN DEFAULT FALSE');
-    } catch (error) {
-      if (!error.message.includes('Duplicate column')) {
-        console.log('Error adding is_recurring column:', error.message);
-      }
-    }
-    try {
-      await pool.query('ALTER TABLE calendar_tasks ADD COLUMN recurrence_type VARCHAR(20) DEFAULT "none"');
-    } catch (error) {
-      if (!error.message.includes('Duplicate column')) {
-        console.log('Error adding recurrence_type column:', error.message);
-      }
-    }
-    try {
-      await pool.query('ALTER TABLE calendar_tasks ADD COLUMN recurrence_end_date DATE NULL');
-    } catch (error) {
-      if (!error.message.includes('Duplicate column')) {
-        console.log('Error adding recurrence_end_date column:', error.message);
-      }
-    }
-    try {
-      await pool.query('ALTER TABLE calendar_tasks ADD COLUMN parent_task_id INT NULL');
-    } catch (error) {
-      if (!error.message.includes('Duplicate column')) {
-        console.log('Error adding parent_task_id column:', error.message);
-      }
-    }
-    try {
-      await pool.query('ALTER TABLE calendar_tasks ADD COLUMN color VARCHAR(7) DEFAULT "#e3f2fd"');
-    } catch (error) {
-      if (!error.message.includes('Duplicate column')) {
-        console.log('Error adding color column:', error.message);
-      }
-    }
-    // Create todo items table
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS todo_items (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        title VARCHAR(255) NOT NULL,
-        completed BOOLEAN DEFAULT FALSE,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-
-    // Create health logs table
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS health_logs (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        log_date DATE NOT NULL UNIQUE,
-        sleep_time VARCHAR(50) NOT NULL,
-        sleep_duration DECIMAL(4,2) NOT NULL,
-        workout_time VARCHAR(50) NULL,
-        workout_duration DECIMAL(4,2) DEFAULT 0,
-        meals JSON NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-      )
-    `);
-    
     res.json({ success: true, message: 'Database setup completed' });
   } catch (error) {
     console.error('Database setup error:', error);
     res.status(500).json({ success: false, message: 'Database setup failed', error: error.message });
   }
+});
+
+// Middleware to ensure database pool is connected on any API request
+app.use(async (req, res, next) => {
+  if (req.path.startsWith('/api') && req.path !== '/api/test-connection' && req.path !== '/api/setup-database') {
+    if (!pool) {
+      await initDatabase();
+    }
+  }
+  next();
 });
 
 // Get tasks for a specific date range
@@ -664,6 +853,560 @@ app.delete('/api/todo-items/:id', async (req, res) => {
   }
 });
 
+// ==================== JIVANDISHA LOCATIONS API ====================
+
+// Get all JivanDisha locations (optional filter: ?country=IN or ?country=US)
+app.get('/api/jivandisha/locations', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(500).json({ success: false, message: 'Database not initialized. Please run setup first.' });
+    }
+    await ensureJivanDishaTable();
+
+    const { country } = req.query;
+    let query = 'SELECT * FROM jivandisha_locations';
+    const params = [];
+    if (country) {
+      query += ' WHERE country = ?';
+      params.push(country.toUpperCase());
+    }
+    query += ' ORDER BY created_at DESC';
+
+    const [rows] = await pool.query(query, params);
+    const locations = rows.map(loc => ({
+      ...loc,
+      lat: parseFloat(loc.lat),
+      lng: parseFloat(loc.lng),
+      books_sent: Number(loc.books_sent || 0),
+      invoice_date: loc.invoice_date ? String(loc.invoice_date).slice(0, 10) : '',
+      payment_received: Boolean(loc.payment_received),
+      decision_maker_name: loc.decision_maker_name || '',
+      decision_maker_phone: loc.decision_maker_phone || '',
+      inventory_keeper_name: loc.inventory_keeper_name || '',
+      inventory_keeper_phone: loc.inventory_keeper_phone || '',
+      invoice_pdf_url: loc.invoice_pdf_url || '',
+      invoice_pdf_name: loc.invoice_pdf_name || ''
+    }));
+    res.json({ success: true, locations });
+  } catch (error) {
+    console.error('Error fetching JivanDisha locations:', error);
+    res.status(500).json({ success: false, message: 'Error fetching locations', error: error.message });
+  }
+});
+
+// Add a new JivanDisha location
+app.post('/api/jivandisha/locations', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(500).json({ success: false, message: 'Database not initialized. Please run setup first.' });
+    }
+    await ensureJivanDishaTable();
+
+    const {
+      country = 'IN',
+      title,
+      category = 'General',
+      lat,
+      lng,
+      city = '',
+      state = '',
+      address = '',
+      notes = '',
+      books_sent = 0,
+      invoice_date = null,
+      payment_received = false,
+      decision_maker_name = '',
+      decision_maker_phone = '',
+      inventory_keeper_name = '',
+      inventory_keeper_phone = '',
+      invoice_pdf_url = '',
+      invoice_pdf_name = '',
+      contact_person = '',
+      contact_phone = '',
+      contact_email = '',
+      website = '',
+      invoice_number = '',
+      amount = null
+    } = req.body;
+
+    if (!title || lat === undefined || lng === undefined) {
+      return res.status(400).json({ success: false, message: 'Title, latitude, and longitude are required' });
+    }
+
+    const sanitizedBooksSent = parseInt(books_sent, 10) || 0;
+    const sanitizedInvoiceDate = invoice_date && invoice_date.trim() ? invoice_date.trim().slice(0, 10) : null;
+    const sanitizedPaymentReceived = Boolean(payment_received);
+
+    const [result] = await pool.query(
+      `INSERT INTO jivandisha_locations 
+       (country, title, category, lat, lng, city, state, address, notes, books_sent, invoice_date, payment_received, decision_maker_name, decision_maker_phone, inventory_keeper_name, inventory_keeper_phone, invoice_pdf_url, invoice_pdf_name, contact_person, contact_phone, contact_email, website)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        country.toUpperCase(),
+        title,
+        category,
+        lat,
+        lng,
+        city,
+        state,
+        address,
+        notes,
+        sanitizedBooksSent,
+        sanitizedInvoiceDate,
+        sanitizedPaymentReceived,
+        decision_maker_name,
+        decision_maker_phone,
+        inventory_keeper_name,
+        inventory_keeper_phone,
+        invoice_pdf_url,
+        invoice_pdf_name,
+        contact_person,
+        contact_phone,
+        contact_email,
+        website
+      ]
+    );
+
+    const newLocationId = result.insertId;
+
+    // If initial invoice or books were provided, also record in jivandisha_invoices table
+    if (sanitizedInvoiceDate || sanitizedBooksSent > 0 || invoice_pdf_url) {
+      try {
+        await pool.query(
+          `INSERT INTO jivandisha_invoices (location_id, invoice_number, invoice_date, books_sent, amount, payment_received, pdf_url, pdf_name, notes)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            newLocationId,
+            invoice_number || 'Initial Shipment',
+            sanitizedInvoiceDate || new Date().toISOString().slice(0, 10),
+            sanitizedBooksSent,
+            amount ? parseFloat(amount) : null,
+            sanitizedPaymentReceived,
+            invoice_pdf_url,
+            invoice_pdf_name,
+            notes ? notes.slice(0, 255) : 'Initial location setup entry'
+          ]
+        );
+      } catch (invErr) {
+        console.error('Error inserting initial invoice:', invErr);
+      }
+    }
+
+    res.json({
+      success: true,
+      id: newLocationId,
+      location: {
+        id: newLocationId,
+        country: country.toUpperCase(),
+        title,
+        category,
+        lat: parseFloat(lat),
+        lng: parseFloat(lng),
+        city,
+        state,
+        address,
+        notes,
+        books_sent: sanitizedBooksSent,
+        invoice_date: sanitizedInvoiceDate || '',
+        payment_received: sanitizedPaymentReceived,
+        decision_maker_name,
+        decision_maker_phone,
+        inventory_keeper_name,
+        inventory_keeper_phone,
+        invoice_pdf_url,
+        invoice_pdf_name,
+        contact_person,
+        contact_phone,
+        contact_email,
+        website
+      }
+    });
+  } catch (error) {
+    console.error('Error adding JivanDisha location:', error);
+    res.status(500).json({ success: false, message: 'Error adding location', error: error.message });
+  }
+});
+
+// Update an existing JivanDisha location
+app.put('/api/jivandisha/locations/:id', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(500).json({ success: false, message: 'Database not initialized. Please run setup first.' });
+    }
+    await ensureJivanDishaTable();
+
+    const { id } = req.params;
+    const {
+      country,
+      title,
+      category,
+      lat,
+      lng,
+      city,
+      state,
+      address,
+      notes,
+      books_sent,
+      invoice_date,
+      payment_received,
+      decision_maker_name,
+      decision_maker_phone,
+      inventory_keeper_name,
+      inventory_keeper_phone,
+      invoice_pdf_url,
+      invoice_pdf_name,
+      contact_person,
+      contact_phone,
+      contact_email,
+      website
+    } = req.body;
+
+    const sanitizedBooksSent = books_sent !== undefined ? (parseInt(books_sent, 10) || 0) : null;
+    const sanitizedInvoiceDate = invoice_date !== undefined ? (invoice_date && invoice_date.trim() ? invoice_date.trim().slice(0, 10) : null) : null;
+    const sanitizedPaymentReceived = payment_received !== undefined ? Boolean(payment_received) : null;
+
+    await pool.query(
+      `UPDATE jivandisha_locations SET 
+       country = COALESCE(?, country),
+       title = COALESCE(?, title),
+       category = COALESCE(?, category),
+       lat = COALESCE(?, lat),
+       lng = COALESCE(?, lng),
+       city = COALESCE(?, city),
+       state = COALESCE(?, state),
+       address = COALESCE(?, address),
+       notes = COALESCE(?, notes),
+       books_sent = CASE WHEN ? IS NOT NULL THEN ? ELSE books_sent END,
+       invoice_date = CASE WHEN ? IS NOT NULL THEN ? ELSE invoice_date END,
+       payment_received = CASE WHEN ? IS NOT NULL THEN ? ELSE payment_received END,
+       decision_maker_name = COALESCE(?, decision_maker_name),
+       decision_maker_phone = COALESCE(?, decision_maker_phone),
+       inventory_keeper_name = COALESCE(?, inventory_keeper_name),
+       inventory_keeper_phone = COALESCE(?, inventory_keeper_phone),
+       invoice_pdf_url = COALESCE(?, invoice_pdf_url),
+       invoice_pdf_name = COALESCE(?, invoice_pdf_name),
+       contact_person = COALESCE(?, contact_person),
+       contact_phone = COALESCE(?, contact_phone),
+       contact_email = COALESCE(?, contact_email),
+       website = COALESCE(?, website)
+       WHERE id = ?`,
+      [
+        country ? country.toUpperCase() : null,
+        title,
+        category,
+        lat,
+        lng,
+        city,
+        state,
+        address,
+        notes,
+        sanitizedBooksSent !== null ? 1 : null,
+        sanitizedBooksSent,
+        invoice_date !== undefined ? 1 : null,
+        sanitizedInvoiceDate,
+        payment_received !== undefined ? 1 : null,
+        sanitizedPaymentReceived,
+        decision_maker_name,
+        decision_maker_phone,
+        inventory_keeper_name,
+        inventory_keeper_phone,
+        invoice_pdf_url,
+        invoice_pdf_name,
+        contact_person,
+        contact_phone,
+        contact_email,
+        website,
+        id
+      ]
+    );
+
+    res.json({ success: true, message: 'Location updated successfully' });
+  } catch (error) {
+    console.error('Error updating JivanDisha location:', error);
+    res.status(500).json({ success: false, message: 'Error updating location', error: error.message });
+  }
+});
+
+// Delete a JivanDisha location and its invoices
+app.delete('/api/jivandisha/locations/:id', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(500).json({ success: false, message: 'Database not initialized. Please run setup first.' });
+    }
+    await ensureJivanDishaTable();
+
+    const { id } = req.params;
+    await pool.query('DELETE FROM jivandisha_invoices WHERE location_id = ?', [id]);
+    await pool.query('DELETE FROM jivandisha_locations WHERE id = ?', [id]);
+    res.json({ success: true, message: 'Location and history deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting JivanDisha location:', error);
+    res.status(500).json({ success: false, message: 'Error deleting location', error: error.message });
+  }
+});
+
+// ==================== JIVANDISHA PDF UPLOAD & PARSER API ====================
+
+// Upload and parse an invoice PDF
+app.post('/api/jivandisha/upload-invoice-pdf', express.raw({ type: 'application/pdf', limit: '50mb' }), async (req, res) => {
+  try {
+    const isBinaryUpload = Buffer.isBuffer(req.body);
+    const filename = isBinaryUpload
+      ? decodeURIComponent(req.get('x-file-name') || 'invoice.pdf')
+      : req.body?.filename || 'invoice.pdf';
+    const country = isBinaryUpload ? (req.get('x-country') || 'IN') : (req.body?.country || 'IN');
+    let buffer;
+
+    if (isBinaryUpload) {
+      buffer = req.body;
+    } else if (req.body?.fileBase64) {
+      const rawBase64 = req.body.fileBase64.includes('base64,')
+        ? req.body.fileBase64.split('base64,')[1]
+        : req.body.fileBase64;
+      buffer = Buffer.from(rawBase64, 'base64');
+    } else {
+      return res.status(400).json({ success: false, message: 'No file data provided' });
+    }
+
+    if (buffer.length === 0) {
+      return res.status(400).json({ success: false, message: 'Empty file buffer' });
+    }
+
+    // Clean filename and generate a unique storage name
+    const ext = '.pdf';
+    const baseName = path.basename(filename, ext).replace(/[^a-zA-Z0-9_-]/g, '_');
+    const savedName = `${Date.now()}_${baseName}${ext}`;
+    const targetPath = path.join(uploadsDir, savedName);
+
+    // Save permanently to disk
+    await fs.promises.writeFile(targetPath, buffer);
+    const pdfUrl = `/uploads/invoices/${savedName}`;
+
+    // Extract values from PDF buffer (dynamically reloaded to prevent stale cache)
+    let parser;
+    try {
+      delete require.cache[require.resolve('./invoiceParser.cjs')];
+      parser = require('./invoiceParser.cjs');
+    } catch (requireErr) {
+      console.warn('Failed to dynamically require invoiceParser:', requireErr.message);
+      parser = { extractFromPdfBuffer };
+    }
+
+    const parseResult = await parser.extractFromPdfBuffer(buffer, country);
+    console.log(`[JivanDisha] PDF "${filename}" uploaded (${buffer.length} bytes). Extraction success: ${parseResult.success}`);
+    if (parseResult.success) {
+      console.log('[JivanDisha] Extracted details:', JSON.stringify(parseResult.data));
+    } else {
+      console.error('[JivanDisha] Parser error:', parseResult.error);
+    }
+
+    if (!parseResult.success) {
+      return res.status(200).json({
+        success: false,
+        pdfUrl,
+        pdfFilename: filename,
+        message: parseResult.error || 'Failed to extract values from PDF',
+        parseError: parseResult.error
+      });
+    }
+
+    res.json({
+      success: true,
+      pdfUrl,
+      pdfFilename: filename,
+      extracted: parseResult.data,
+      rawPreview: parseResult.rawText || ''
+    });
+  } catch (error) {
+    console.error('Error uploading/parsing invoice PDF:', error);
+    res.status(500).json({ success: false, message: 'Failed to process invoice PDF', error: error.message });
+  }
+});
+
+// ==================== JIVANDISHA INVOICES API ====================
+
+// Get all past invoices for a location
+app.get('/api/jivandisha/locations/:id/invoices', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(500).json({ success: false, message: 'Database not initialized. Please run setup first.' });
+    }
+    await ensureJivanDishaTable();
+
+    const { id } = req.params;
+    const [rows] = await pool.query(
+      'SELECT * FROM jivandisha_invoices WHERE location_id = ? ORDER BY invoice_date DESC, id DESC',
+      [id]
+    );
+
+    const invoices = rows.map(inv => ({
+      ...inv,
+      invoice_date: inv.invoice_date ? String(inv.invoice_date).slice(0, 10) : '',
+      books_sent: Number(inv.books_sent || 0),
+      amount: inv.amount ? parseFloat(inv.amount) : null,
+      payment_received: Boolean(inv.payment_received),
+      pdf_url: inv.pdf_url || '',
+      pdf_name: inv.pdf_name || ''
+    }));
+
+    res.json({ success: true, invoices });
+  } catch (error) {
+    console.error('Error fetching invoices for location:', error);
+    res.status(500).json({ success: false, message: 'Error fetching invoices', error: error.message });
+  }
+});
+
+// Add a new invoice for a location
+app.post('/api/jivandisha/locations/:id/invoices', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(500).json({ success: false, message: 'Database not initialized. Please run setup first.' });
+    }
+    await ensureJivanDishaTable();
+
+    const { id } = req.params;
+    const {
+      invoice_number = '',
+      invoice_date = new Date().toISOString().slice(0, 10),
+      books_sent = 0,
+      amount = null,
+      payment_received = false,
+      pdf_url = '',
+      pdf_name = '',
+      notes = ''
+    } = req.body;
+
+    const sanitizedBooks = parseInt(books_sent, 10) || 0;
+    const sanitizedDate = invoice_date && invoice_date.trim() ? invoice_date.trim().slice(0, 10) : new Date().toISOString().slice(0, 10);
+    const sanitizedPayment = Boolean(payment_received);
+    const sanitizedAmount = amount ? parseFloat(amount) : null;
+
+    const [result] = await pool.query(
+      `INSERT INTO jivandisha_invoices 
+       (location_id, invoice_number, invoice_date, books_sent, amount, payment_received, pdf_url, pdf_name, notes)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [id, invoice_number, sanitizedDate, sanitizedBooks, sanitizedAmount, sanitizedPayment, pdf_url, pdf_name, notes]
+    );
+
+    // Update location total books_sent and latest invoice_date
+    const [sumRows] = await pool.query(
+      'SELECT SUM(books_sent) as total_books FROM jivandisha_invoices WHERE location_id = ?',
+      [id]
+    );
+    const totalBooks = sumRows[0]?.total_books || sanitizedBooks;
+    await pool.query(
+      'UPDATE jivandisha_locations SET books_sent = ?, invoice_date = ? WHERE id = ?',
+      [totalBooks, sanitizedDate, id]
+    );
+
+    res.json({
+      success: true,
+      id: result.insertId,
+      invoice: {
+        id: result.insertId,
+        location_id: Number(id),
+        invoice_number,
+        invoice_date: sanitizedDate,
+        books_sent: sanitizedBooks,
+        amount: sanitizedAmount,
+        payment_received: sanitizedPayment,
+        pdf_url,
+        pdf_name,
+        notes
+      }
+    });
+  } catch (error) {
+    console.error('Error adding invoice:', error);
+    res.status(500).json({ success: false, message: 'Error adding invoice', error: error.message });
+  }
+});
+
+// Update an invoice (e.g. toggle payment_received, edit details)
+app.put('/api/jivandisha/invoices/:invoiceId', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(500).json({ success: false, message: 'Database not initialized. Please run setup first.' });
+    }
+    await ensureJivanDishaTable();
+
+    const { invoiceId } = req.params;
+    const {
+      invoice_number,
+      invoice_date,
+      books_sent,
+      amount,
+      payment_received,
+      pdf_url,
+      pdf_name,
+      notes
+    } = req.body;
+
+    await pool.query(
+      `UPDATE jivandisha_invoices SET 
+       invoice_number = COALESCE(?, invoice_number),
+       invoice_date = COALESCE(?, invoice_date),
+       books_sent = COALESCE(?, books_sent),
+       amount = COALESCE(?, amount),
+       payment_received = CASE WHEN ? IS NOT NULL THEN ? ELSE payment_received END,
+       pdf_url = COALESCE(?, pdf_url),
+       pdf_name = COALESCE(?, pdf_name),
+       notes = COALESCE(?, notes)
+       WHERE id = ?`,
+      [
+        invoice_number,
+        invoice_date ? invoice_date.slice(0, 10) : null,
+        books_sent !== undefined ? parseInt(books_sent, 10) : null,
+        amount !== undefined ? parseFloat(amount) : null,
+        payment_received !== undefined ? 1 : null,
+        payment_received !== undefined ? Boolean(payment_received) : null,
+        pdf_url,
+        pdf_name,
+        notes,
+        invoiceId
+      ]
+    );
+
+    res.json({ success: true, message: 'Invoice updated successfully' });
+  } catch (error) {
+    console.error('Error updating invoice:', error);
+    res.status(500).json({ success: false, message: 'Error updating invoice', error: error.message });
+  }
+});
+
+// Delete an invoice
+app.delete('/api/jivandisha/invoices/:invoiceId', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(500).json({ success: false, message: 'Database not initialized. Please run setup first.' });
+    }
+    await ensureJivanDishaTable();
+
+    const { invoiceId } = req.params;
+    await pool.query('DELETE FROM jivandisha_invoices WHERE id = ?', [invoiceId]);
+    res.json({ success: true, message: 'Invoice deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting invoice:', error);
+    res.status(500).json({ success: false, message: 'Error deleting invoice', error: error.message });
+  }
+});
+
+app.use((error, req, res, next) => {
+  if (res.headersSent) return next(error);
+
+  if (error.type === 'entity.too.large' || error.status === 413) {
+    return res.status(413).json({
+      success: false,
+      message: 'Request too large. Invoice PDF uploads are limited to 50 MB.'
+    });
+  }
+
+  console.error('Unhandled API error:', error);
+  res.status(error.status || 500).json({ success: false, message: 'Internal server error' });
+});
+
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
+  initDatabase().catch(err => {
+    console.error('Initial database connection warning:', err.message);
+  });
 });

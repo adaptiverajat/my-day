@@ -3,7 +3,7 @@ import { getDateRange, getCurrentRange } from '../utils/dateUtils'
 
 const API_URL = 'http://localhost:3001/api'
 
-export const useCalendarTasks = (currentDate, currentView) => {
+export const useCalendarTasks = (currentDate, currentView, enabled = true) => {
   const [tasks, setTasks] = useState([])
 
   const fetchTasks = async () => {
@@ -114,8 +114,9 @@ export const useCalendarTasks = (currentDate, currentView) => {
   }
 
   useEffect(() => {
+    if (!enabled) return
     fetchTasks()
-  }, [currentDate, currentView])
+  }, [currentDate, currentView, enabled])
 
   return { tasks, addTask, deleteTask, updateTask, fetchTasks }
 }

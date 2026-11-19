@@ -13,6 +13,7 @@ import DayView from './components/DayView'
 import MonthView from './components/MonthView'
 import YearView from './components/YearView'
 import Report from './components/Report'
+import JivanDisha from './components/JivanDisha'
 import { useCalendarTasks } from './hooks/useCalendarTasks'
 import { useTodoItems } from './hooks/useTodoItems'
 import { useTimeSlots } from './hooks/useTimeSlots'
@@ -24,6 +25,8 @@ function Calendar() {
   const navigate = useNavigate()
   const [currentDate, setCurrentDate] = useState(new Date())
   const [currentView, setCurrentView] = useState('week')
+  const [databaseReady, setDatabaseReady] = useState(false)
+  const [databaseError, setDatabaseError] = useState('')
   const [showModal, setShowModal] = useState(false)
   const [selectedDate, setSelectedDate] = useState(null)
   const [initialFromTime, setInitialFromTime] = useState('')
@@ -38,10 +41,10 @@ function Calendar() {
   const minimalView = viewDensity >= 1
   const ultraMinimalView = viewDensity === 2
   
-  const { tasks, addTask, updateTask, deleteTask, fetchTasks } = useCalendarTasks(currentDate, currentView)
+  const { tasks, addTask, updateTask, deleteTask, fetchTasks } = useCalendarTasks(currentDate, currentView, databaseReady)
   
 
-  const { todoItems, addTodoItem, toggleTodoItem, deleteTodoItem, updateTodoItem } = useTodoItems()
+  const { todoItems, addTodoItem, toggleTodoItem, deleteTodoItem, updateTodoItem } = useTodoItems(databaseReady)
   const timeSlots = useTimeSlots()
   const currentTime = useCurrentTime(() => {
     // Refresh page at midnight
@@ -50,9 +53,16 @@ function Calendar() {
 
   const setupDatabase = async () => {
     try {
-      await fetch('http://localhost:3001/api/setup-database')
+      setDatabaseError('')
+      const response = await fetch('http://localhost:3001/api/setup-database')
+      const data = await response.json()
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || data.message || 'Database setup failed')
+      }
+      setDatabaseReady(true)
     } catch (error) {
       console.error('Error setting up database:', error)
+      setDatabaseError(error.message)
     }
   }
 
@@ -170,9 +180,16 @@ function Calendar() {
 
   return (
     <div className="calendar-app">
+      {!databaseReady && (
+        <div role={databaseError ? 'alert' : 'status'}>
+          {databaseError
+            ? <>Database unavailable: {databaseError} <button onClick={setupDatabase}>Retry</button></>
+            : 'Connecting to the database…'}
+        </div>
+      )}
       <div className="header-row">
         <CalendarHeader />
-        <ViewControls currentView={currentView} setCurrentView={setCurrentView} setCurrentDate={setCurrentDate} viewDensity={viewDensity} setViewDensity={setViewDensity} onReportClick={() => navigate('/report', { state: { currentDate, currentView } })} onVoiceInputClick={() => setShowVoiceInput(true)} onHelpClick={() => setShowHelp(true)} />
+        <ViewControls currentView={currentView} setCurrentView={setCurrentView} setCurrentDate={setCurrentDate} viewDensity={viewDensity} setViewDensity={setViewDensity} onReportClick={() => navigate('/report', { state: { currentDate, currentView } })} onJivanDishaClick={() => navigate('/jivandisha')} onVoiceInputClick={() => setShowVoiceInput(true)} onHelpClick={() => setShowHelp(true)} />
         <div className="date-display">
           <div className="digital-clock">
             {currentTime.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}
@@ -310,6 +327,7 @@ function App() {
     <Routes>
       <Route path="/" element={<Calendar />} />
       <Route path="/report" element={<Report />} />
+      <Route path="/jivandisha" element={<JivanDisha />} />
     </Routes>
   )
 }

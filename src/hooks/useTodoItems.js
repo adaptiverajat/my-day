@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 
 const API_URL = 'http://localhost:3001/api'
 
-export const useTodoItems = () => {
+export const useTodoItems = (enabled = true) => {
   const [todoItems, setTodoItems] = useState([])
 
   const fetchTodoItems = async () => {
@@ -101,8 +101,9 @@ export const useTodoItems = () => {
   }
 
   useEffect(() => {
+    if (!enabled) return
     fetchTodoItems()
-  }, [])
+  }, [enabled])
 
   return { todoItems, addTodoItem, toggleTodoItem, deleteTodoItem, updateTodoItem, fetchTodoItems }
 }
