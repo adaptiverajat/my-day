@@ -80,7 +80,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
 
 // Initialize OpenAI client
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || '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'
+  apiKey: process.env.OPENAI_API_KEY || 'NOT_SET'
 });
 
 // MySQL connection configuration
