@@ -35,7 +35,7 @@ const normalizeDateInputValue = (value) => {
   return ''
 }
 
-const TaskModal = ({ show, onClose, selectedDate, onSave, timeSlots, initialFromTime, initialToTime, editingTask, onDelete }) => {
+const TaskModal = ({ show, onClose, selectedDate, onSave, timeSlots, initialFromTime, initialToTime, editingTask, onDelete, secretMode }) => {
   const [newTask, setNewTask] = useState({
     title: '',
     description: '',
@@ -44,7 +44,8 @@ const TaskModal = ({ show, onClose, selectedDate, onSave, timeSlots, initialFrom
     is_recurring: false,
     recurrence_type: 'none',
     recurrence_end_date: '',
-    color: '#e3f2fd'
+    color: '#e3f2fd',
+    is_hidden: Boolean(secretMode)
   })
   const [taskDate, setTaskDate] = useState(
     () => normalizeDateInputValue(editingTask?.task_date || selectedDate) || formatDateInputValue(new Date())
@@ -73,7 +74,8 @@ const TaskModal = ({ show, onClose, selectedDate, onSave, timeSlots, initialFrom
         is_recurring: editingTask.is_recurring || false,
         recurrence_type: editingTask.recurrence_type || 'none',
         recurrence_end_date: editingTask.recurrence_end_date || '',
-        color: editingTask.color || '#e3f2fd'
+        color: editingTask.color || '#e3f2fd',
+        is_hidden: Boolean(editingTask.is_hidden)
       })
       setTaskDate(taskDateValue)
       setEditMode('single') // Reset edit mode when opening edit modal
@@ -87,11 +89,12 @@ const TaskModal = ({ show, onClose, selectedDate, onSave, timeSlots, initialFrom
         is_recurring: false,
         recurrence_type: 'none',
         recurrence_end_date: '',
-        color: '#e3f2fd'
+        color: '#e3f2fd',
+        is_hidden: Boolean(secretMode)
       })
       setTaskDate(formatDateInputValue(selectedDate || new Date()))
     }
-  }, [editingTask, initialFromTime, initialToTime, selectedDate, show])
+  }, [editingTask, initialFromTime, initialToTime, selectedDate, show, secretMode])
 
   const handleSubmit = () => {
     if (!newTask.from_time || !newTask.to_time) {
@@ -122,8 +125,17 @@ const TaskModal = ({ show, onClose, selectedDate, onSave, timeSlots, initialFrom
     setRecurrenceError('')
 
     if (newTask.title.trim()) {
+      let isHidden = false
+      if (secretMode) {
+        if (!editingTask && !newTask.is_recurring) {
+          isHidden = true
+        } else {
+          isHidden = Boolean(newTask.is_hidden)
+        }
+      }
       onSave({
         ...newTask,
+        is_hidden: isHidden,
         task_date: taskDate,
         editMode: editMode
       })
@@ -254,6 +266,18 @@ const TaskModal = ({ show, onClose, selectedDate, onSave, timeSlots, initialFrom
           </div>
         </div>
         {timeError && <div className="form-error" style={{ color: '#d32f2f', marginTop: '8px', fontSize: '14px' }}>{timeError}</div>}
+        {secretMode && (
+          <div className="form-group">
+            <label>
+              <input
+                type="checkbox"
+                checked={newTask.is_hidden}
+                onChange={(e) => setNewTask({ ...newTask, is_hidden: e.target.checked })}
+              />
+              {' '}Hidden Task (only visible in secret mode)
+            </label>
+          </div>
+        )}
         <div className="form-group">
           <label>Details:</label>
           <textarea

@@ -1,8 +1,8 @@
 import { getYearMonths, getTasksForMonth } from '../utils/dateUtils'
 
-const YearView = ({ currentDate, tasks, onMonthClick }) => {
+const YearView = ({ currentDate, tasks, onMonthClick, secretMode }) => {
   const hasRecurringTasks = (month) => {
-    return getTasksForMonth(tasks, month).some(task => task.is_recurring)
+    return getTasksForMonth(tasks, month).filter(task => secretMode || !task.is_hidden).some(task => task.is_recurring)
   }
   const yearMonths = getYearMonths(currentDate)
 
@@ -17,7 +17,7 @@ const YearView = ({ currentDate, tasks, onMonthClick }) => {
           >
             <div className="year-month-name">{month.toLocaleDateString('en-US', { month: 'long' })}</div>
             <div className="year-month-tasks">
-              {getTasksForMonth(tasks, month).length} tasks
+              {getTasksForMonth(tasks, month).filter(task => secretMode || !task.is_hidden).length} tasks
               {hasRecurringTasks(month) && <span className="recurring-indicator"> ↻</span>}
             </div>
           </div>

@@ -87,8 +87,9 @@ const Report = () => {
       const data = await response.json()
       
       if (data.success) {
-        setTasks(data.tasks)
-        generateReport(data.tasks)
+        const visibleTasks = data.tasks.filter(t => !t.is_hidden)
+        setTasks(visibleTasks)
+        generateReport(visibleTasks)
       } else {
         setError(data.message || 'Failed to fetch tasks')
         setLoading(false)

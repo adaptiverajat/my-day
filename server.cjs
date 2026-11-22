@@ -1,10 +1,15 @@
 const express = require('express');
 const mysql = require('mysql2/promise');
 const cors = require('cors');
+
 const path = require('path');
 const fs = require('fs');
 const { extractFromPdfBuffer } = require('./invoiceParser.cjs');
 require('dotenv').config();
+const OpenAI = require('openai');
+const pdfParse = require('pdf-parse');
+
+
 
 const app = express();
 const port = Number(process.env.API_PORT || 3001);
@@ -70,15 +75,20 @@ const parseLocalDate = (value) => {
 
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
+
+// Initialize OpenAI client
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY || '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'
+});
 
 // MySQL connection configuration
 const dbConfig = {
   host: process.env.DB_HOST || 'localhost',
   port: Number(process.env.DB_PORT || 3306),
   user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || 'aX$Eq16k',
+  password: process.env.DB_PASSWORD || 'root',
   database: databaseName,
   connectionLimit: 5,
   waitForConnections: true,
@@ -276,6 +286,7 @@ const setupAllTables = async () => {
       recurrence_end_date DATE NULL,
       parent_task_id INT NULL,
       color VARCHAR(7) DEFAULT '#e3f2fd',
+      is_hidden BOOLEAN DEFAULT FALSE,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `);
@@ -316,6 +327,13 @@ const setupAllTables = async () => {
       console.log('Error adding color column:', error.message);
     }
   }
+  try {
+    await pool.query('ALTER TABLE calendar_tasks ADD COLUMN is_hidden BOOLEAN DEFAULT FALSE');
+  } catch (error) {
+    if (!error.message.includes('Duplicate column')) {
+      console.log('Error adding is_hidden column:', error.message);
+    }
+  }
 
   // Create todo items table
   await pool.query(`
@@ -349,7 +367,7 @@ const setupAllTables = async () => {
 // Initialize database connection pool automatically
 const initDatabase = async () => {
   if (pool) {
-    await ensureJivanDishaTable();
+    await setupAllTables();
     return pool;
   }
 
@@ -375,6 +393,164 @@ app.get('/api/setup-database', async (req, res) => {
     const currentPool = await initDatabase();
     if (!currentPool) {
       return res.status(500).json({ success: false, message: 'Database setup failed to connect to MySQL' });
+    }
+
+    // Create todo items table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS todo_items (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        title VARCHAR(255) NOT NULL,
+        completed BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Create health logs table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS health_logs (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        log_date DATE NOT NULL UNIQUE,
+        sleep_time VARCHAR(50) NOT NULL,
+        sleep_duration DECIMAL(4,2) NOT NULL,
+        workout_time VARCHAR(50) NULL,
+        workout_duration DECIMAL(4,2) DEFAULT 0,
+        meals JSON NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Create user credentials table for Finances access
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS user_credentials (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        email VARCHAR(255) NOT NULL UNIQUE,
+        password VARCHAR(255) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Create finances months table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS finances_months (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        month VARCHAR(20) NOT NULL,
+        year INT NOT NULL,
+        income DECIMAL(10,2) DEFAULT 0,
+        income_confirmed BOOLEAN DEFAULT FALSE,
+        savings DECIMAL(10,2) DEFAULT 0,
+        invested_type VARCHAR(20) DEFAULT 'None',
+        invested_amount DECIMAL(10,2) DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        UNIQUE KEY unique_month_year (month, year)
+      )
+    `);
+
+    // Create finances known expenses table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS finances_known_expenses (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        month_id INT NOT NULL,
+        name VARCHAR(255) NOT NULL,
+        amount DECIMAL(10,2) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Create finances unpredictable expenses table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS finances_unpredictable_expenses (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        month_id INT NOT NULL,
+        name VARCHAR(255) NOT NULL,
+        amount DECIMAL(10,2) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Create finances invested transactions table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS finances_invested_transactions (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        month_id INT NOT NULL,
+        type VARCHAR(20) NOT NULL,
+        amount DECIMAL(10,2) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Create finances income items table (multiple income sources per month)
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS finances_income_items (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        month_id INT NOT NULL,
+        name VARCHAR(255) NOT NULL DEFAULT 'Salary',
+        amount DECIMAL(10,2) NOT NULL DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Create assets table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS finances_assets (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        amount DECIMAL(10,2) NOT NULL,
+        category VARCHAR(20) NOT NULL DEFAULT 'movable',
+        type VARCHAR(20) NOT NULL DEFAULT 'asset',
+        excluded BOOLEAN DEFAULT FALSE,
+        percent DECIMAL(5,2) DEFAULT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Create work columns table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS work_columns (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        title VARCHAR(255) NOT NULL,
+        color VARCHAR(7) DEFAULT '#e3f2fd',
+        sort_order INT DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Create work items table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS work_items (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        column_id INT NOT NULL,
+        text TEXT NOT NULL,
+        completed BOOLEAN DEFAULT FALSE,
+        notes TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (column_id) REFERENCES work_columns(id) ON DELETE CASCADE
+      )
+    `);
+
+    // Add columns if they don't exist (for existing tables)
+    try {
+      await pool.query('ALTER TABLE finances_assets ADD COLUMN excluded BOOLEAN DEFAULT FALSE');
+    } catch (e) {
+      // Column already exists, ignore
+    }
+    try {
+      await pool.query('ALTER TABLE finances_assets ADD COLUMN percent DECIMAL(5,2) DEFAULT NULL');
+    } catch (e) {
+      // Column already exists, ignore
+    }
+    try {
+      await pool.query('ALTER TABLE finances_assets ADD COLUMN sort_order INT DEFAULT 0');
+    } catch (e) {
+      // Column already exists, ignore
+    }
+    try {
+      await pool.query('ALTER TABLE finances_assets ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP');
+    } catch (e) {
+      // Column already exists, ignore
     }
     res.json({ success: true, message: 'Database setup completed' });
   } catch (error) {
@@ -414,7 +590,8 @@ app.get('/api/calendar-tasks', async (req, res) => {
     const [rows] = await pool.query(query, params);
     const tasks = rows.map(task => ({
       ...task,
-      task_date: task.task_date ? String(task.task_date).slice(0, 10) : task.task_date
+      task_date: task.task_date ? String(task.task_date).slice(0, 10) : task.task_date,
+      is_hidden: Boolean(task.is_hidden)
     }));
     res.json({ success: true, tasks });
   } catch (error) {
@@ -444,7 +621,8 @@ app.get('/api/tasks', async (req, res) => {
     const [rows] = await pool.query(query, params);
     const tasks = rows.map(task => ({
       ...task,
-      task_date: task.task_date ? String(task.task_date).slice(0, 10) : task.task_date
+      task_date: task.task_date ? String(task.task_date).slice(0, 10) : task.task_date,
+      is_hidden: Boolean(task.is_hidden)
     }));
     res.json({ success: true, tasks });
   } catch (error) {
@@ -460,7 +638,7 @@ app.post('/api/calendar-tasks', async (req, res) => {
       return res.status(500).json({ success: false, message: 'Database not initialized. Please run setup first.' });
     }
     
-    const { title, description, task_date, from_time, to_time, is_recurring, recurrence_type, recurrence_end_date, color } = req.body;
+    const { title, description, task_date, from_time, to_time, is_recurring, recurrence_type, recurrence_end_date, color, is_hidden } = req.body;
 
     // Convert recurrence_end_date to proper format (YYYY-MM-DD) if provided
     const formattedRecurrenceEndDate = recurrence_end_date
@@ -489,8 +667,8 @@ app.post('/api/calendar-tasks', async (req, res) => {
       while (currentDate <= endDate && taskCount < maxTasks) {
         console.log(`Creating task ${taskCount + 1} for date:`, currentDate.toISOString().split('T')[0]);
         const [result] = await pool.query(
-          'INSERT INTO calendar_tasks (title, description, task_date, from_time, to_time, is_recurring, recurrence_type, recurrence_end_date, color) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-          [title, description, currentDate.toISOString().split('T')[0], from_time, to_time, 1, recurrence_type, formattedRecurrenceEndDate, color || '#e3f2fd']
+          'INSERT INTO calendar_tasks (title, description, task_date, from_time, to_time, is_recurring, recurrence_type, recurrence_end_date, color, is_hidden) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+          [title, description, currentDate.toISOString().split('T')[0], from_time, to_time, 1, recurrence_type, formattedRecurrenceEndDate, color || '#e3f2fd', is_hidden ? 1 : 0]
         );
         createdTasks.push({ id: result.insertId, date: currentDate.toISOString().split('T')[0] });
         taskCount++;
@@ -518,8 +696,8 @@ app.post('/api/calendar-tasks', async (req, res) => {
       console.log('Creating single task');
       // Create single task
       const [result] = await pool.query(
-        'INSERT INTO calendar_tasks (title, description, task_date, from_time, to_time, is_recurring, recurrence_type, color) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-        [title, description, task_date, from_time, to_time, 0, 'none', color || '#e3f2fd']
+        'INSERT INTO calendar_tasks (title, description, task_date, from_time, to_time, is_recurring, recurrence_type, color, is_hidden) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [title, description, task_date, from_time, to_time, 0, 'none', color || '#e3f2fd', is_hidden ? 1 : 0]
       );
       res.json({ success: true, id: result.insertId });
     }
@@ -662,7 +840,7 @@ app.put('/api/calendar-tasks/:id', async (req, res) => {
     }
     
     const { id } = req.params;
-    const { title, description, task_date, from_time, to_time, editMode, is_recurring, recurrence_type, recurrence_end_date, color } = req.body;
+    const { title, description, task_date, from_time, to_time, editMode, is_recurring, recurrence_type, recurrence_end_date, color, is_hidden } = req.body;
 
     // Convert recurrence_end_date to proper format (YYYY-MM-DD) if provided
     const formattedRecurrenceEndDate = recurrence_end_date
@@ -671,11 +849,13 @@ app.put('/api/calendar-tasks/:id', async (req, res) => {
 
     console.log('Updating task:', id, 'with editMode:', editMode, 'is_recurring:', is_recurring, 'recurrence_type:', recurrence_type);
     
+    const hiddenVal = is_hidden !== undefined ? (is_hidden ? 1 : 0) : 0;
+
     if (editMode === 'single') {
       // Update only this instance
       const [result] = await pool.query(
-        'UPDATE calendar_tasks SET title = ?, description = ?, task_date = ?, from_time = ?, to_time = ?, is_recurring = ?, recurrence_type = ?, recurrence_end_date = ?, color = ? WHERE id = ?',
-        [title, description, task_date, from_time, to_time, is_recurring || 0, recurrence_type || 'none', formattedRecurrenceEndDate, color || '#e3f2fd', id]
+        'UPDATE calendar_tasks SET title = ?, description = ?, task_date = ?, from_time = ?, to_time = ?, is_recurring = ?, recurrence_type = ?, recurrence_end_date = ?, color = ?, is_hidden = ? WHERE id = ?',
+        [title, description, task_date, from_time, to_time, is_recurring || 0, recurrence_type || 'none', formattedRecurrenceEndDate, color || '#e3f2fd', hiddenVal, id]
       );
       res.json({ success: true, message: 'Task updated successfully' });
     } else if (editMode === 'all' || editMode === 'future') {
@@ -718,8 +898,8 @@ app.put('/api/calendar-tasks/:id', async (req, res) => {
         
         while (currentDate <= endDate && taskCount < maxTasks) {
           const [result] = await pool.query(
-            'INSERT INTO calendar_tasks (title, description, task_date, from_time, to_time, is_recurring, recurrence_type, recurrence_end_date, color) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-            [title, description, currentDate.toISOString().split('T')[0], from_time, to_time, 1, recurrence_type, recurrence_end_date, color || '#e3f2fd']
+            'INSERT INTO calendar_tasks (title, description, task_date, from_time, to_time, is_recurring, recurrence_type, recurrence_end_date, color, is_hidden) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [title, description, currentDate.toISOString().split('T')[0], from_time, to_time, 1, recurrence_type, recurrence_end_date, color || '#e3f2fd', hiddenVal]
           );
           createdTasks.push({ id: result.insertId, date: currentDate.toISOString().split('T')[0] });
           taskCount++;
@@ -752,8 +932,8 @@ app.put('/api/calendar-tasks/:id', async (req, res) => {
         }
         
         const [result] = await pool.query(
-          `UPDATE calendar_tasks SET title = ?, description = ?, from_time = ?, to_time = ?, is_recurring = ?, recurrence_type = ?, recurrence_end_date = ?, color = ? ${whereClause}`,
-          [title, description, from_time, to_time, is_recurring || 0, recurrence_type || 'none', recurrence_end_date || null, color || '#e3f2fd', ...params]
+          `UPDATE calendar_tasks SET title = ?, description = ?, from_time = ?, to_time = ?, is_recurring = ?, recurrence_type = ?, recurrence_end_date = ?, color = ?, is_hidden = ? ${whereClause}`,
+          [title, description, from_time, to_time, is_recurring || 0, recurrence_type || 'none', recurrence_end_date || null, color || '#e3f2fd', hiddenVal, ...params]
         );
         
         res.json({ success: true, message: `Updated ${result.affectedRows} task instances` });
@@ -761,8 +941,8 @@ app.put('/api/calendar-tasks/:id', async (req, res) => {
     } else {
       // Default: single update
       const [result] = await pool.query(
-        'UPDATE calendar_tasks SET title = ?, description = ?, task_date = ?, from_time = ?, to_time = ?, is_recurring = ?, recurrence_type = ?, recurrence_end_date = ?, color = ? WHERE id = ?',
-        [title, description, task_date, from_time, to_time, is_recurring || 0, recurrence_type || 'none', recurrence_end_date || null, color || '#e3f2fd', id]
+        'UPDATE calendar_tasks SET title = ?, description = ?, task_date = ?, from_time = ?, to_time = ?, is_recurring = ?, recurrence_type = ?, recurrence_end_date = ?, color = ?, is_hidden = ? WHERE id = ?',
+        [title, description, task_date, from_time, to_time, is_recurring || 0, recurrence_type || 'none', recurrence_end_date || null, color || '#e3f2fd', hiddenVal, id]
       );
       res.json({ success: true, message: 'Task updated successfully' });
     }
@@ -1387,6 +1567,547 @@ app.delete('/api/jivandisha/invoices/:invoiceId', async (req, res) => {
   } catch (error) {
     console.error('Error deleting invoice:', error);
     res.status(500).json({ success: false, message: 'Error deleting invoice', error: error.message });
+  }
+});
+
+// ==================== USER AUTHENTICATION API ====================
+
+// Check if any user exists in the database
+app.get('/api/user/check', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(500).json({ success: false, message: 'Database not initialized' });
+    }
+
+    const [rows] = await pool.query('SELECT email FROM user_credentials LIMIT 1');
+    const userExists = rows.length > 0;
+    res.json({ success: true, userExists, email: userExists ? rows[0].email : null });
+  } catch (error) {
+    console.error('Error checking user:', error);
+    res.status(500).json({ success: false, message: 'Error checking user', error: error.message });
+  }
+});
+
+// Create a new user
+app.post('/api/user/create', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(500).json({ success: false, message: 'Database not initialized' });
+    }
+
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ success: false, message: 'Email and password are required' });
+    }
+
+    // Check if user already exists
+    const [existing] = await pool.query('SELECT id FROM user_credentials WHERE email = ?', [email]);
+    if (existing.length > 0) {
+      return res.status(400).json({ success: false, message: 'User already exists' });
+    }
+
+    // Create user (storing password as plain text for now - in production, use bcrypt)
+    await pool.query('INSERT INTO user_credentials (email, password) VALUES (?, ?)', [email, password]);
+
+    res.json({ success: true, message: 'User created successfully' });
+  } catch (error) {
+    console.error('Error creating user:', error);
+    res.status(500).json({ success: false, message: 'Error creating user', error: error.message });
+  }
+});
+
+// Login user
+app.post('/api/user/login', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(500).json({ success: false, message: 'Database not initialized' });
+    }
+
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ success: false, message: 'Email and password are required' });
+    }
+
+    // Check credentials (plain text comparison for now - in production, use bcrypt)
+    const [rows] = await pool.query('SELECT id FROM user_credentials WHERE email = ? AND password = ?', [email, password]);
+
+    if (rows.length === 0) {
+      return res.status(401).json({ success: false, message: 'Invalid email or password' });
+    }
+
+    res.json({ success: true, message: 'Login successful' });
+  } catch (error) {
+    console.error('Error logging in user:', error);
+    res.status(500).json({ success: false, message: 'Error logging in', error: error.message });
+  }
+});
+
+// ==================== FINANCES API ====================
+
+// Initialize finances data (ensure months exist)
+app.get('/api/finances/initialize', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(500).json({ success: false, message: 'Database not initialized' });
+    }
+
+    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const currentYear = new Date().getFullYear();
+
+    for (const month of months) {
+      await pool.query(
+        'INSERT IGNORE INTO finances_months (month, year) VALUES (?, ?)',
+        [month, currentYear]
+      );
+    }
+
+    res.json({ success: true, message: 'Finances initialized' });
+  } catch (error) {
+    console.error('Error initializing finances:', error);
+    res.status(500).json({ success: false, message: 'Error initializing finances', error: error.message });
+  }
+});
+
+// Get all finances data
+app.get('/api/finances', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(500).json({ success: false, message: 'Database not initialized' });
+    }
+
+    const [months] = await pool.query('SELECT * FROM finances_months ORDER BY year, FIELD(month, "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December")');
+
+    for (const month of months) {
+      const [knownExpenses] = await pool.query('SELECT * FROM finances_known_expenses WHERE month_id = ?', [month.id]);
+      const [unpredictableExpenses] = await pool.query('SELECT * FROM finances_unpredictable_expenses WHERE month_id = ?', [month.id]);
+      const [investedTransactions] = await pool.query('SELECT * FROM finances_invested_transactions WHERE month_id = ?', [month.id]);
+      const [incomeItems] = await pool.query('SELECT * FROM finances_income_items WHERE month_id = ?', [month.id]);
+
+      month.knownExpenses = knownExpenses;
+      month.unpredictableExpenses = unpredictableExpenses;
+      month.investedTransactions = investedTransactions;
+      month.incomeItems = incomeItems;
+    }
+
+    res.json({ success: true, months });
+  } catch (error) {
+    console.error('Error fetching finances:', error);
+    res.status(500).json({ success: false, message: 'Error fetching finances', error: error.message });
+  }
+});
+
+// Parse document (PDF/Excel/text) - placeholder for now
+app.post('/api/finances/parse', async (req, res) => {
+  try {
+    const { fileType, content } = req.body;
+    // TODO: Implement actual parsing logic
+    res.json({ success: false, message: 'Document parsing not yet implemented' });
+  } catch (error) {
+    console.error('Error parsing document:', error);
+    res.status(500).json({ success: false, message: 'Error parsing document', error: error.message });
+  }
+});
+
+// Update income for a month
+app.post('/api/finances/income', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(500).json({ success: false, message: 'Database not initialized' });
+    }
+
+    const { monthId, income, incomeConfirmed, incomeItems } = req.body;
+
+    await pool.query(
+      'UPDATE finances_months SET income = ?, income_confirmed = ? WHERE id = ?',
+      [income, incomeConfirmed, monthId]
+    );
+
+    if (incomeItems && Array.isArray(incomeItems)) {
+      await pool.query('DELETE FROM finances_income_items WHERE month_id = ?', [monthId]);
+      for (const item of incomeItems) {
+        await pool.query(
+          'INSERT INTO finances_income_items (month_id, name, amount) VALUES (?, ?, ?)',
+          [monthId, item.name || 'Salary', item.amount || 0]
+        );
+      }
+    }
+
+    res.json({ success: true, message: 'Income updated' });
+  } catch (error) {
+    console.error('Error updating income:', error);
+    res.status(500).json({ success: false, message: 'Error updating income', error: error.message });
+  }
+});
+
+// Update known expenses for a month
+app.post('/api/finances/expenses', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(500).json({ success: false, message: 'Database not initialized' });
+    }
+
+    const { monthId, knownExpenses } = req.body;
+
+    await pool.query('DELETE FROM finances_known_expenses WHERE month_id = ?', [monthId]);
+
+    if (knownExpenses && Array.isArray(knownExpenses)) {
+      for (const expense of knownExpenses) {
+        await pool.query(
+          'INSERT INTO finances_known_expenses (month_id, name, amount) VALUES (?, ?, ?)',
+          [monthId, expense.name, expense.amount]
+        );
+      }
+    }
+
+    res.json({ success: true, message: 'Expenses updated' });
+  } catch (error) {
+    console.error('Error updating expenses:', error);
+    res.status(500).json({ success: false, message: 'Error updating expenses', error: error.message });
+  }
+});
+
+// Update unpredictable expenses for a month
+app.post('/api/finances/unpredictable-expenses', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(500).json({ success: false, message: 'Database not initialized' });
+    }
+
+    const { monthId, unpredictableExpenses } = req.body;
+
+    await pool.query('DELETE FROM finances_unpredictable_expenses WHERE month_id = ?', [monthId]);
+
+    if (unpredictableExpenses && Array.isArray(unpredictableExpenses)) {
+      for (const expense of unpredictableExpenses) {
+        await pool.query(
+          'INSERT INTO finances_unpredictable_expenses (month_id, name, amount) VALUES (?, ?, ?)',
+          [monthId, expense.name, expense.amount]
+        );
+      }
+    }
+
+    res.json({ success: true, message: 'Unpredictable expenses updated' });
+  } catch (error) {
+    console.error('Error updating unpredictable expenses:', error);
+    res.status(500).json({ success: false, message: 'Error updating unpredictable expenses', error: error.message });
+  }
+});
+
+// Update invested amount for a month
+app.post('/api/finances/invested', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(500).json({ success: false, message: 'Database not initialized' });
+    }
+
+    const { monthId, type, amount, transactions } = req.body;
+
+    await pool.query(
+      'UPDATE finances_months SET invested_type = ?, invested_amount = ? WHERE id = ?',
+      [type, amount, monthId]
+    );
+
+    if (transactions && Array.isArray(transactions)) {
+      await pool.query('DELETE FROM finances_invested_transactions WHERE month_id = ?', [monthId]);
+      for (const txn of transactions) {
+        await pool.query(
+          'INSERT INTO finances_invested_transactions (month_id, type, amount) VALUES (?, ?, ?)',
+          [monthId, txn.type, txn.amount]
+        );
+      }
+    }
+
+    res.json({ success: true, message: 'Invested updated' });
+  } catch (error) {
+    console.error('Error updating invested:', error);
+    res.status(500).json({ success: false, message: 'Error updating invested', error: error.message });
+  }
+});
+
+// Get all assets
+app.get('/api/finances/assets', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(500).json({ success: false, message: 'Database not initialized' });
+    }
+
+    const [assets] = await pool.query('SELECT * FROM finances_assets ORDER BY sort_order, id');
+    res.json({ success: true, assets });
+  } catch (error) {
+    console.error('Error fetching assets:', error);
+    res.status(500).json({ success: false, message: 'Error fetching assets', error: error.message });
+  }
+});
+
+// Add new asset
+app.post('/api/finances/assets', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(500).json({ success: false, message: 'Database not initialized' });
+    }
+
+    const { name, amount, category, type, excluded, percent } = req.body;
+
+    const [result] = await pool.query(
+      'INSERT INTO finances_assets (name, amount, category, type, excluded, percent) VALUES (?, ?, ?, ?, ?, ?)',
+      [name, amount, category, type, excluded || false, percent || null]
+    );
+
+    res.json({ success: true, id: result.insertId });
+  } catch (error) {
+    console.error('Error adding asset:', error);
+    res.status(500).json({ success: false, message: 'Error adding asset', error: error.message });
+  }
+});
+
+// Update asset
+app.put('/api/finances/assets/:id', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(500).json({ success: false, message: 'Database not initialized' });
+    }
+
+    const { id } = req.params;
+    const { name, amount, category, type, excluded, percent } = req.body;
+
+    await pool.query(
+      'UPDATE finances_assets SET name = ?, amount = ?, category = ?, type = ?, excluded = ?, percent = ? WHERE id = ?',
+      [name, amount, category, type, excluded || false, percent || null, id]
+    );
+
+    res.json({ success: true, message: 'Asset updated' });
+  } catch (error) {
+    console.error('Error updating asset:', error);
+    res.status(500).json({ success: false, message: 'Error updating asset', error: error.message });
+  }
+});
+
+// Delete asset
+app.delete('/api/finances/assets/:id', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(500).json({ success: false, message: 'Database not initialized' });
+    }
+
+    const { id } = req.params;
+    await pool.query('DELETE FROM finances_assets WHERE id = ?', [id]);
+
+    res.json({ success: true, message: 'Asset deleted' });
+  } catch (error) {
+    console.error('Error deleting asset:', error);
+    res.status(500).json({ success: false, message: 'Error deleting asset', error: error.message });
+  }
+});
+
+// Reorder assets
+app.post('/api/finances/assets/reorder', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(500).json({ success: false, message: 'Database not initialized' });
+    }
+
+    const { assetIds } = req.body;
+
+    if (assetIds && Array.isArray(assetIds)) {
+      for (let i = 0; i < assetIds.length; i++) {
+        await pool.query(
+          'UPDATE finances_assets SET sort_order = ? WHERE id = ?',
+          [i, assetIds[i]]
+        );
+      }
+    }
+
+    res.json({ success: true, message: 'Assets reordered' });
+  } catch (error) {
+    console.error('Error reordering assets:', error);
+    res.status(500).json({ success: false, message: 'Error reordering assets', error: error.message });
+  }
+});
+
+// ==================== WORK API ====================
+
+// Get all work columns
+app.get('/api/work/columns', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(500).json({ success: false, message: 'Database not initialized' });
+    }
+
+    const [columns] = await pool.query('SELECT * FROM work_columns ORDER BY sort_order, id');
+
+    for (const column of columns) {
+      const [items] = await pool.query('SELECT * FROM work_items WHERE column_id = ? ORDER BY id', [column.id]);
+      column.items = items;
+    }
+
+    res.json({ success: true, columns });
+  } catch (error) {
+    console.error('Error fetching work columns:', error);
+    res.status(500).json({ success: false, message: 'Error fetching work columns', error: error.message });
+  }
+});
+
+// Create new column
+app.post('/api/work/columns', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(500).json({ success: false, message: 'Database not initialized' });
+    }
+
+    const { title, color } = req.body;
+
+    const [result] = await pool.query(
+      'INSERT INTO work_columns (title, color) VALUES (?, ?)',
+      [title, color || '#e3f2fd']
+    );
+
+    res.json({ success: true, id: result.insertId });
+  } catch (error) {
+    console.error('Error creating work column:', error);
+    res.status(500).json({ success: false, message: 'Error creating work column', error: error.message });
+  }
+});
+
+// Update column
+app.put('/api/work/columns/:id', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(500).json({ success: false, message: 'Database not initialized' });
+    }
+
+    const { id } = req.params;
+    const { title, color } = req.body;
+
+    await pool.query(
+      'UPDATE work_columns SET title = ?, color = ? WHERE id = ?',
+      [title, color, id]
+    );
+
+    res.json({ success: true, message: 'Column updated' });
+  } catch (error) {
+    console.error('Error updating work column:', error);
+    res.status(500).json({ success: false, message: 'Error updating work column', error: error.message });
+  }
+});
+
+// Delete column
+app.delete('/api/work/columns/:id', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(500).json({ success: false, message: 'Database not initialized' });
+    }
+
+    const { id } = req.params;
+    await pool.query('DELETE FROM work_columns WHERE id = ?', [id]);
+
+    res.json({ success: true, message: 'Column deleted' });
+  } catch (error) {
+    console.error('Error deleting work column:', error);
+    res.status(500).json({ success: false, message: 'Error deleting work column', error: error.message });
+  }
+});
+
+// Create new item
+app.post('/api/work/items', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(500).json({ success: false, message: 'Database not initialized' });
+    }
+
+    const { columnId, text, notes } = req.body;
+
+    const [result] = await pool.query(
+      'INSERT INTO work_items (column_id, text, notes) VALUES (?, ?, ?)',
+      [columnId, text, notes || null]
+    );
+
+    res.json({ success: true, id: result.insertId });
+  } catch (error) {
+    console.error('Error creating work item:', error);
+    res.status(500).json({ success: false, message: 'Error creating work item', error: error.message });
+  }
+});
+
+// Update item
+app.put('/api/work/items/:id', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(500).json({ success: false, message: 'Database not initialized' });
+    }
+
+    const { id } = req.params;
+    const { completed, text, notes } = req.body;
+
+    let query = 'UPDATE work_items SET ';
+    let params = [];
+    let updates = [];
+
+    if (completed !== undefined) {
+      updates.push('completed = ?');
+      params.push(completed);
+    }
+    if (text !== undefined) {
+      updates.push('text = ?');
+      params.push(text);
+    }
+    if (notes !== undefined) {
+      updates.push('notes = ?');
+      params.push(notes);
+    }
+
+    query += updates.join(', ') + ' WHERE id = ?';
+    params.push(id);
+
+    await pool.query(query, params);
+
+    res.json({ success: true, message: 'Item updated' });
+  } catch (error) {
+    console.error('Error updating work item:', error);
+    res.status(500).json({ success: false, message: 'Error updating work item', error: error.message });
+  }
+});
+
+// Delete item
+app.delete('/api/work/items/:id', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(500).json({ success: false, message: 'Database not initialized' });
+    }
+
+    const { id } = req.params;
+    await pool.query('DELETE FROM work_items WHERE id = ?', [id]);
+
+    res.json({ success: true, message: 'Item deleted' });
+  } catch (error) {
+    console.error('Error deleting work item:', error);
+    res.status(500).json({ success: false, message: 'Error deleting work item', error: error.message });
+  }
+});
+
+// Reorder columns
+app.post('/api/work/columns/reorder', async (req, res) => {
+  try {
+    if (!pool) {
+      return res.status(500).json({ success: false, message: 'Database not initialized' });
+    }
+
+    const { columnIds } = req.body;
+
+    if (columnIds && Array.isArray(columnIds)) {
+      for (let i = 0; i < columnIds.length; i++) {
+        await pool.query(
+          'UPDATE work_columns SET sort_order = ? WHERE id = ?',
+          [i, columnIds[i]]
+        );
+      }
+    }
+
+    res.json({ success: true, message: 'Columns reordered' });
+  } catch (error) {
+    console.error('Error reordering work columns:', error);
+    res.status(500).json({ success: false, message: 'Error reordering work columns', error: error.message });
   }
 });
 

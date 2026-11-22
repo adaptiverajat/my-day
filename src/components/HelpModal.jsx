@@ -62,6 +62,9 @@ const HelpModal = ({ onClose }) => {
               <li><strong>View Density:</strong> Switch between Normal, Minimal, or Ultra-Minimal UI density</li>
               <li><strong>Voice Input (🎤):</strong> Create tasks using voice commands (in future updates). Currently text based.</li>
               <li><strong>Report:</strong> View analytics and insights about your tasks</li>
+              <li><strong>Finances (💰):</strong> Track monthly income, expenses, savings, and investments with detailed financial planning</li>
+              <li><strong>Work (📋):</strong> Kanban-style board for managing work tasks across different columns</li>
+              <li><strong>JivanDisha (📖):</strong> Interactive operations map for tracking book distribution locations and invoice management</li>
             </ul>
           </section>
           
@@ -73,6 +76,9 @@ const HelpModal = ({ onClose }) => {
                     <li>Manage To-Dos: Add items to side panel → Toggle completion → Edit or delete as needed</li>
                     <li>Generate Reports: Click Report button → View analytics dashboard</li>
                     <li>Voice Input: Click microphone → Speak task details → System converts to task</li>
+                    <li>Manage Finances: Hover over app title → Click Finances → Set up account → Track income, expenses, savings, and assets</li>
+                    <li>Work Board: Hover over app title → Click Work → Create columns → Add tasks → Drag and drop to organize</li>
+                    <li>JivanDisha: Hover over app title → Click JivanDisha → View map → Add locations → Upload invoices → Track book distribution</li>
                 </ul>
           </section>
 

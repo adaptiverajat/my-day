@@ -2,7 +2,7 @@ import { getMonthDays } from '../utils/dateUtils'
 import { getTasksForDate } from '../utils/dateUtils'
 import { formatTime12Hour } from '../utils/timeUtils'
 
-const MonthView = ({ currentDate, tasks, onDayClick, onTaskClick }) => {
+const MonthView = ({ currentDate, tasks, onDayClick, onTaskClick, secretMode }) => {
   const monthDays = getMonthDays(currentDate)
 
   return (
@@ -23,7 +23,7 @@ const MonthView = ({ currentDate, tasks, onDayClick, onTaskClick }) => {
               <>
                 <div className="month-day-number">{day.getDate()}</div>
                 <div className="month-day-tasks">
-                  {getTasksForDate(tasks, day).slice(0, 3).map(task => (
+                  {getTasksForDate(tasks, day).filter(task => secretMode || !task.is_hidden).slice(0, 3).map(task => (
                     <div 
                       key={task.id} 
                       className={`mini-task ${task.is_recurring ? 'recurring' : ''}`}
@@ -38,9 +38,12 @@ const MonthView = ({ currentDate, tasks, onDayClick, onTaskClick }) => {
                       {task.is_recurring && <span className="recurring-indicator">↻</span>}
                     </div>
                   ))}
-                  {getTasksForDate(tasks, day).length > 3 && (
-                    <div className="more-tasks">+{getTasksForDate(tasks, day).length - 3} more</div>
-                  )}
+                  {(() => {
+                    const visibleTasks = getTasksForDate(tasks, day).filter(task => secretMode || !task.is_hidden)
+                    return visibleTasks.length > 3 && (
+                      <div className="more-tasks">+{visibleTasks.length - 3} more</div>
+                    )
+                  })()}
                 </div>
               </>
             )}

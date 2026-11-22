@@ -8,6 +8,8 @@ import TaskModal from './components/TaskModal'
 import VoiceInputModal from './components/VoiceInputModal'
 import HelpModal from './components/HelpModal'
 import ScreensaverModal from './components/ScreensaverModal'
+import Finances from './components/Finances'
+import Work from './components/Work'
 import WeekView from './components/WeekView'
 import DayView from './components/DayView'
 import MonthView from './components/MonthView'
@@ -36,7 +38,8 @@ function Calendar() {
   const [showVoiceInput, setShowVoiceInput] = useState(false)
   const [showHelp, setShowHelp] = useState(false)
   const [showScreensaver, setShowScreensaver] = useState(false)
-  
+  const [secretMode, setSecretMode] = useState(false)
+
   // Derive flags from slider value
   const minimalView = viewDensity >= 1
   const ultraMinimalView = viewDensity === 2
@@ -188,8 +191,8 @@ function Calendar() {
         </div>
       )}
       <div className="header-row">
-        <CalendarHeader />
-        <ViewControls currentView={currentView} setCurrentView={setCurrentView} setCurrentDate={setCurrentDate} viewDensity={viewDensity} setViewDensity={setViewDensity} onReportClick={() => navigate('/report', { state: { currentDate, currentView } })} onJivanDishaClick={() => navigate('/jivandisha')} onVoiceInputClick={() => setShowVoiceInput(true)} onHelpClick={() => setShowHelp(true)} />
+        <CalendarHeader onVoiceInputClick={() => setShowVoiceInput(true)} onHelpClick={() => setShowHelp(true)} onSecretModeToggle={setSecretMode} />
+        <ViewControls currentView={currentView} setCurrentView={setCurrentView} setCurrentDate={setCurrentDate} viewDensity={viewDensity} setViewDensity={setViewDensity} />
         <div className="date-display">
           <div className="digital-clock">
             {currentTime.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}
@@ -233,7 +236,7 @@ function Calendar() {
       </div>
 
       {(currentView === 'week' || currentView === 'current') && (
-        <WeekView 
+        <WeekView
           currentDate={currentDate}
           tasks={tasks}
           timeSlots={timeSlots}
@@ -242,33 +245,37 @@ function Calendar() {
           currentTime={currentTime}
           days={currentView === 'current' ? getCurrentRange(currentDate).days : undefined}
           viewDensity={viewDensity}
+          secretMode={secretMode}
         />
       )}
 
       {currentView === 'day' && (
-        <DayView 
+        <DayView
           key={`day-${currentDate.toISOString()}-${tasks.length}`}
           currentDate={currentDate}
           tasks={tasks}
           onDayClick={handleDayClick}
           onTaskClick={handleTaskClick}
+          secretMode={secretMode}
         />
       )}
 
       {currentView === 'month' && (
-        <MonthView 
+        <MonthView
           currentDate={currentDate}
           tasks={tasks}
           onDayClick={handleDayClick}
           onTaskClick={handleTaskClick}
+          secretMode={secretMode}
         />
       )}
 
       {currentView === 'year' && (
-        <YearView 
+        <YearView
           currentDate={currentDate}
           tasks={tasks}
           onMonthClick={handleMonthClick}
+          secretMode={secretMode}
         />
       )}
 
@@ -280,7 +287,7 @@ function Calendar() {
         onUpdate={updateTodoItem}
       />
 
-      <TaskModal 
+      <TaskModal
         show={showModal}
         onClose={() => {
           setShowModal(false)
@@ -292,6 +299,7 @@ function Calendar() {
         initialFromTime={initialFromTime}
         initialToTime={initialToTime}
         editingTask={editingTask}
+        secretMode={secretMode}
         onDelete={async (id, deleteMode) => {
           const success = await deleteTask(id, deleteMode)
           if (success) {
@@ -328,6 +336,8 @@ function App() {
       <Route path="/" element={<Calendar />} />
       <Route path="/report" element={<Report />} />
       <Route path="/jivandisha" element={<JivanDisha />} />
+      <Route path="/finances" element={<Finances />} />
+      <Route path="/work" element={<Work />} />
     </Routes>
   )
 }

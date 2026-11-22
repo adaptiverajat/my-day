@@ -1,8 +1,8 @@
 import { getTasksForDate } from '../utils/dateUtils'
 import { formatTime12Hour } from '../utils/timeUtils'
 
-const DayView = ({ currentDate, tasks, onDayClick, onTaskClick }) => {
-  const dayTasks = getTasksForDate(tasks, currentDate)
+const DayView = ({ currentDate, tasks, onDayClick, onTaskClick, secretMode }) => {
+  const dayTasks = getTasksForDate(tasks, currentDate).filter(task => secretMode || !task.is_hidden)
 
   return (
     <div className="day-view">

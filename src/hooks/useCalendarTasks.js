@@ -1,12 +1,14 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { getDateRange, getCurrentRange } from '../utils/dateUtils'
 
 const API_URL = 'http://localhost:3001/api'
 
 export const useCalendarTasks = (currentDate, currentView, enabled = true) => {
   const [tasks, setTasks] = useState([])
+  const retryCountRef = useRef(0)
+  const retryTimerRef = useRef(null)
 
-  const fetchTasks = async () => {
+  const fetchTasks = async (isRetry = false) => {
     try {
       let startDate, endDate
       
@@ -38,10 +40,18 @@ export const useCalendarTasks = (currentDate, currentView, enabled = true) => {
         if (data.success) {
           // Force re-render by setting a new array reference
           setTasks([...data.tasks])
+          retryCountRef.current = 0
         }
       }
     } catch (error) {
       console.error('Error fetching tasks:', error)
+      // Retry up to 5 times with increasing delay if server isn't ready
+      if (!isRetry && retryCountRef.current < 5) {
+        retryCountRef.current += 1
+        const delay = retryCountRef.current * 1000
+        if (retryTimerRef.current) clearTimeout(retryTimerRef.current)
+        retryTimerRef.current = setTimeout(() => fetchTasks(true), delay)
+      }
     }
   }
 

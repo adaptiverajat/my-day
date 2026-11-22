@@ -1,4 +1,4 @@
-const ViewControls = ({ currentView, setCurrentView, setCurrentDate, viewDensity, setViewDensity, onReportClick, onJivanDishaClick, onVoiceInputClick, onHelpClick }) => {
+const ViewControls = ({ currentView, setCurrentView, setCurrentDate, viewDensity, setViewDensity }) => {
   const handleToday = () => {
     setCurrentDate(new Date())
   }
@@ -40,39 +40,11 @@ const ViewControls = ({ currentView, setCurrentView, setCurrentDate, viewDensity
       >
         Current
       </button>
-      <button 
+      <button
         className="today-btn"
         onClick={handleToday}
       >
         Today
-      </button>
-      <button 
-        className="report-btn"
-        onClick={onReportClick}
-      >
-        Report
-      </button>
-      <button 
-        className="report-btn jivandisha-nav-btn"
-        onClick={onJivanDishaClick}
-        style={{ background: '#4f46e5', color: '#fff', borderColor: '#4338ca', fontWeight: 600 }}
-        title="JivanDisha - Interactive Operations Map"
-      >
-        📖 JivanDisha
-      </button>
-      <button 
-        className="voice-input-btn"
-        onClick={onVoiceInputClick}
-        title="Voice Input"
-      >
-        🎤
-      </button>
-      <button 
-        className="help-btn"
-        onClick={onHelpClick}
-        title="Help & Information"
-      >
-        ?
       </button>
       <div className="density-slider-container">
         <label className="density-label">Density:</label>

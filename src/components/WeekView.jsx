@@ -3,7 +3,7 @@ import { getWeekDays } from '../utils/dateUtils'
 import { getTasksForDate } from '../utils/dateUtils'
 import { calculateTaskPosition, getCurrentTimePosition, formatTime12Hour } from '../utils/timeUtils'
 
-const WeekView = ({ currentDate, tasks, timeSlots, onDayClick, onTaskClick, currentTime, days, viewDensity }) => {
+const WeekView = ({ currentDate, tasks, timeSlots, onDayClick, onTaskClick, currentTime, days, viewDensity, secretMode }) => {
   const mainScrollRef = useRef(null)
   const leftTimeScrollRef = useRef(null)
   const rightTimeScrollRef = useRef(null)
@@ -25,7 +25,7 @@ const WeekView = ({ currentDate, tasks, timeSlots, onDayClick, onTaskClick, curr
       let isBlank = true
       
       weekDays.forEach(day => {
-        const dayTasks = getTasksForDate(tasks, day)
+        const dayTasks = getTasksForDate(tasks, day).filter(task => secretMode || !task.is_hidden)
         const timeValue = time.value
         const [hours, minutes] = timeValue.split(':').map(Number)
         const slotStartMinutes = hours * 60 + minutes
@@ -51,7 +51,7 @@ const WeekView = ({ currentDate, tasks, timeSlots, onDayClick, onTaskClick, curr
     })
     
     return blankSlots
-  }, [viewDensity, JSON.stringify(tasks), weekDays, timeSlots, currentDate])
+  }, [viewDensity, JSON.stringify(tasks), weekDays, timeSlots, currentDate, secretMode])
 
   // Calculate actual pixel position considering collapsed slots
   const getActualPosition = (slotIndex) => {
@@ -267,7 +267,7 @@ const WeekView = ({ currentDate, tasks, timeSlots, onDayClick, onTaskClick, curr
                 })}
                 
                 {(() => {
-                  const dayTasks = getTasksForDate(tasks, day)
+                  const dayTasks = getTasksForDate(tasks, day).filter(task => secretMode || !task.is_hidden)
                   const positionedTasks = handleOverlappingTasks(dayTasks)
                   
                   return positionedTasks.map(task => (

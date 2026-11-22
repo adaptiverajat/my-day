@@ -14,7 +14,7 @@ const ScreensaverModal = ({ show, tasks, currentDate }) => {
 
   const getTasksForDay = (date) => {
     const dateStr = date.toISOString().split('T')[0]
-    return tasks.filter(task => task.task_date === dateStr)
+    return tasks.filter(task => task.task_date === dateStr && !task.is_hidden)
   }
 
   const getDays = () => {
