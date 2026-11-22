@@ -5,7 +5,7 @@ const CalendarHeader = ({ onVoiceInputClick, onHelpClick, onSecretModeToggle }) 
   const navigate = useNavigate()
   const [showDropdown, setShowDropdown] = useState(false)
   const [secretMode, setSecretMode] = useState(false)
-  const [secretKeySequence, setSecretKeySequence] = useState('')
+  const secretKeySequenceRef = useRef('')
   const dropdownRef = useRef(null)
 
   const SECRET_CODE = 'mtbt'
@@ -14,7 +14,7 @@ const CalendarHeader = ({ onVoiceInputClick, onHelpClick, onSecretModeToggle }) 
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowDropdown(false)
-        setSecretKeySequence('')
+        secretKeySequenceRef.current = ''
       }
     }
 
@@ -30,18 +30,14 @@ const CalendarHeader = ({ onVoiceInputClick, onHelpClick, onSecretModeToggle }) 
   useEffect(() => {
     const handleKeyPress = (event) => {
       if (showDropdown && !secretMode) {
-        setSecretKeySequence(prev => {
-          const newSequence = prev + event.key.toLowerCase()
-          if (newSequence === SECRET_CODE) {
-            setSecretMode(true)
-            onSecretModeToggle?.(true)
-            return ''
-          }
-          if (newSequence.length > SECRET_CODE.length) {
-            return newSequence.slice(-SECRET_CODE.length)
-          }
-          return newSequence
-        })
+        if (event.key.length !== 1) return
+        const newSequence = (secretKeySequenceRef.current + event.key.toLowerCase()).slice(-SECRET_CODE.length)
+        secretKeySequenceRef.current = newSequence
+        if (newSequence === SECRET_CODE) {
+          secretKeySequenceRef.current = ''
+          setSecretMode(true)
+          onSecretModeToggle?.(true)
+        }
       }
     }
 
@@ -55,16 +51,16 @@ const CalendarHeader = ({ onVoiceInputClick, onHelpClick, onSecretModeToggle }) 
   }, [showDropdown, secretMode, onSecretModeToggle])
 
   const handleTitleClick = () => {
-    setShowDropdown(!showDropdown)
-    if (!showDropdown) {
-      setSecretKeySequence('')
-    }
+    setShowDropdown(prev => !prev)
+    secretKeySequenceRef.current = ''
   }
 
-  const handleHideSecret = () => {
+  const handleHideSecret = (e) => {
+    e.stopPropagation()
     setSecretMode(false)
     onSecretModeToggle?.(false)
     setShowDropdown(false)
+    secretKeySequenceRef.current = ''
   }
 
   return (
@@ -73,28 +69,28 @@ const CalendarHeader = ({ onVoiceInputClick, onHelpClick, onSecretModeToggle }) 
         <img src="/favicon.png" alt="Logo" className="app-logo" />
         Rajat's calendar
         {showDropdown && (
-          <div className="app-title-dropdown">
+          <div className="app-title-dropdown" onClick={(e) => e.stopPropagation()}>
             {secretMode && (
               <button className="dropdown-item dropdown-item-secret" onClick={handleHideSecret}>
                 🔒 Hide Secret Mode
               </button>
             )}
-            <button className="dropdown-item" onClick={() => navigate('/report')}>
+            <button className="dropdown-item" onClick={() => { setShowDropdown(false); navigate('/report'); }}>
               📊 Report
             </button>
-            <button className="dropdown-item" onClick={() => navigate('/jivandisha')}>
+            <button className="dropdown-item" onClick={() => { setShowDropdown(false); navigate('/jivandisha'); }}>
               📖 JivanDisha
             </button>
-            <button className="dropdown-item" onClick={() => navigate('/finances')}>
+            <button className="dropdown-item" onClick={() => { setShowDropdown(false); navigate('/finances'); }}>
               💰 Finances
             </button>
-            <button className="dropdown-item" onClick={() => navigate('/work')}>
+            <button className="dropdown-item" onClick={() => { setShowDropdown(false); navigate('/work'); }}>
               📋 Work
             </button>
-            <button className="dropdown-item" onClick={onVoiceInputClick}>
+            <button className="dropdown-item" onClick={(e) => { setShowDropdown(false); onVoiceInputClick?.(e); }}>
               🎤 Voice Input
             </button>
-            <button className="dropdown-item" onClick={onHelpClick}>
+            <button className="dropdown-item" onClick={(e) => { setShowDropdown(false); onHelpClick?.(e); }}>
               ❓ Help
             </button>
           </div>
