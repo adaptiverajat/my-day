@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import AppLogoMenu from './AppLogoMenu'
 
 const Work = () => {
   const navigate = useNavigate()
@@ -250,7 +251,10 @@ const Work = () => {
   return (
     <div className="work-page">
       <div className="work-header">
-        <h1>Work</h1>
+        <AppLogoMenu
+          title="Work"
+          currentScreen="work"
+        />
         <div className="work-header-controls">
           <button className="btn-back" onClick={() => navigate('/')}>Back to Calendar</button>
           <button className="btn-add-column" onClick={() => setShowAddColumnModal(true)}>

@@ -135,9 +135,9 @@ function parseInvoiceText(text, defaultCountry = 'IN') {
 
   const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
 
-  // 1. Invoice Number (Priority: "INVOICE NO : JD20260611002")
+  // 1. Invoice Number (Priority: "INVOICE NO : JD20260611002", "INVOICE #INV-2026-999")
   for (const line of lines) {
-    const invMatch = line.match(/\b(?:INVOICE\s*(?:NO\.?|#|NUM(?:BER)?)|INV\s*(?:NO\.?|#)?)\s*[:\s#]+([A-Za-z0-9\-_/]{3,})/i);
+    const invMatch = line.match(/\b(?:INVOICE\s*(?:NO\.?|#|NUM(?:BER)?)?|INV\s*(?:NO\.?|#)?)\s*[:#\s-]*\s*([A-Za-z0-9][A-Za-z0-9\-_/]{2,})/i);
     if (invMatch && invMatch[1]) {
       const val = invMatch[1].trim();
       if (!/^(date|total|tax|bill|due|reverse|charge)/i.test(val)) {
@@ -171,8 +171,8 @@ function parseInvoiceText(text, defaultCountry = 'IN') {
     }
   }
 
-  // 3. Customer / Destination Title (e.g. "Billed to : \n ISKCON Chennai,")
-  const billedToRegex = /\b(?:billed\s*to|bill\s*to|sold\s*to|customer|buyer|consignee|ship\s*to|invoice\s*to|m\/s\.?)\s*[:\s]*/i;
+  // 3. Customer / Destination Title (e.g. "Billed to : \n ISKCON Chennai,", "To: Hare Krishna Temple")
+  const billedToRegex = /\b(?:billed\s*to|bill\s*to|sold\s*to|customer|buyer|consignee|ship\s*to|invoice\s*to|deliver\s*to|to|m\/s\.?)\s*[:\s]*/i;
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     if (billedToRegex.test(line)) {
@@ -268,15 +268,27 @@ function parseInvoiceText(text, defaultCountry = 'IN') {
     }
   }
 
-  // 9. Attn / Contact person if not set
+  // 9. Attn / Decision Maker / Contact person if not set
   if (!result.decision_maker_name) {
-    const attnRegex = /(?:attn|attention|kind\s*attn|contact(?:\s*person)?|owner)[:\s]+([^\n\r,]+)/i;
+    const attnRegex = /(?:attn|attention|kind\s*attn|decision\s*maker|contact(?:\s*person)?|owner)[:\s]+([^\n\r,(]+)/i;
     for (const line of lines) {
       if (/owner\.jivandisha/i.test(line)) continue;
       const m = line.match(attnRegex);
       if (m && m[1]) {
         result.decision_maker_name = m[1].trim();
         break;
+      }
+    }
+  }
+
+  // 10. Phone number extraction
+  if (!result.decision_maker_phone) {
+    const phoneMatch = text.match(/(?:phone|mobile|tel|cell|call)[:\s]*([+0-9()\s-]{7,20})/i) ||
+                       text.match(/\b(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b/);
+    if (phoneMatch) {
+      const cleanPhone = phoneMatch[1] ? phoneMatch[1].trim() : phoneMatch[0].trim();
+      if (cleanPhone.length >= 7 && !/undri|pune/i.test(cleanPhone)) {
+        result.decision_maker_phone = cleanPhone;
       }
     }
   }

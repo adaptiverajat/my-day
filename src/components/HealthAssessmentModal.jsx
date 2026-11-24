@@ -57,7 +57,7 @@ const HealthAssessmentModal = ({ onClose, onSubmit, date }) => {
     setAiError('')
   }
 
-  const handleParseHealthText = async () => {
+  const handleParseHealthText = () => {
     if (!healthText.trim()) {
       setAiError('Please enter a quick health note first.')
       return
@@ -67,69 +67,56 @@ const HealthAssessmentModal = ({ onClose, onSubmit, date }) => {
     setAiError('')
 
     try {
-      const apiKey = import.meta.env.VITE_OPENAI_API_KEY
-      if (!apiKey) {
-        setAiError('OpenAI API key not found in .env file')
-        return
+      const text = healthText
+
+      // Sleep time: e.g. "slept at 11:30 PM", "sleep at 11 PM", "bed at 11:00"
+      const sleepTimeMatch = text.match(/(?:slept|sleep|bed)\s*(?:at)?\s*(\d{1,2}(?::\d{2})?\s*(?:AM|PM|am|pm)?)/i)
+      if (sleepTimeMatch) {
+        setSleepTime(sleepTimeMatch[1].trim())
       }
 
-      const prompt = `Extract a daily health log from this plain-language note. Use the current date if not specified. Return ONLY valid JSON with this exact shape:
-{
-  "sleepTime": "11:00 PM",
-  "sleepDuration": 7.5,
-  "workoutTime": "6:00 AM",
-  "workoutDuration": 1,
-  "meals": [
-    { "time": "8:00 AM", "detail": "Oatmeal with berries" },
-    { "time": "1:00 PM", "detail": "Chicken salad" }
-  ],
-  "summary": "Short human-readable summary"
-}
-
-Use strings like 'none' for no workout and leave workoutDuration to 0 if there is no workout.
-If there are multiple meals, include each as an object with time and detail.
-If a value is not mentioned, use null or empty string where appropriate.
-Date to log: ${selectedDate}
-
-User note:
-${healthText}`
-
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify({
-          model: 'gpt-3.5-turbo',
-          messages: [
-            { role: 'system', content: 'You convert plain-language daily wellness notes into structured JSON.' },
-            { role: 'user', content: prompt }
-          ],
-          max_tokens: 800,
-          temperature: 0.2
-        })
-      })
-
-      const data = await response.json()
-      if (data.error) {
-        throw new Error(data.error.message)
+      // Sleep duration: e.g. "for 7.5 hours", "slept 8 hrs", "7 hours of sleep"
+      const sleepDurMatch = text.match(/(\d+(?:\.\d+)?)\s*(?:hours|hrs|hr|h)\s*(?:of\s*sleep)?/i)
+      if (sleepDurMatch) {
+        setSleepDuration(sleepDurMatch[1])
       }
 
-      const content = data.choices?.[0]?.message?.content
-      if (!content) {
-        throw new Error('No AI response received')
+      // Workout duration: e.g. "45 min workout", "1 hour workout", "workout for 30 minutes"
+      const workoutMinMatch = text.match(/(\d+)\s*(?:mins|min|minutes)\s*(?:workout|exercise|gym)?/i)
+      const workoutHourMatch = text.match(/(\d+(?:\.\d+)?)\s*(?:hours|hrs|hr|h)\s*(?:workout|exercise|gym)/i)
+      if (workoutMinMatch) {
+        setWorkoutDuration((parseInt(workoutMinMatch[1], 10) / 60).toFixed(1))
+      } else if (workoutHourMatch) {
+        setWorkoutDuration(workoutHourMatch[1])
       }
 
-      const jsonMatch = content.match(/\{[\s\S]*\}/)
-      if (!jsonMatch) {
-        throw new Error('AI response was not valid JSON')
+      // Workout time: e.g. "workout at 6:00 AM", "gym at 7 AM"
+      const workoutTimeMatch = text.match(/(?:workout|gym|exercise|ran|walked)\s*(?:at)?\s*(\d{1,2}(?::\d{2})?\s*(?:AM|PM|am|pm)?)/i)
+      if (workoutTimeMatch) {
+        setWorkoutTime(workoutTimeMatch[1].trim())
+      } else if (text.toLowerCase().includes('no workout') || text.toLowerCase().includes('none')) {
+        setWorkoutTime('none')
+        setWorkoutDuration('0')
       }
 
-      const parsed = JSON.parse(jsonMatch[0])
-      applyParsedSuggestion(parsed)
+      // Meals: e.g. "ate oatmeal at 8 AM", "lunch at 1 PM chicken salad"
+      const extractedMeals = []
+      const mealMatches = text.matchAll(/(?:ate|had|eating|breakfast|lunch|dinner|snack)\s+([^\.,;]+?)(?:\s+at\s+(\d{1,2}(?::\d{2})?\s*(?:AM|PM|am|pm)?)|$|[,\.])/gi)
+      for (const m of mealMatches) {
+        const detail = (m[1] || '').trim()
+        const time = (m[2] || '').trim()
+        if (detail && detail.length < 50) {
+          extractedMeals.push({ time: time || '12:00 PM', detail })
+        }
+      }
+      if (extractedMeals.length > 0) {
+        setMeals(extractedMeals)
+      }
+
+      setAiSuggestion('Extracted details from note. Please review fields below.')
+      setAiError('')
     } catch (err) {
-      setAiError('Unable to parse that note: ' + err.message)
+      setAiError('Unable to extract details: ' + err.message)
     } finally {
       setAiLoading(false)
     }
@@ -212,7 +199,7 @@ ${healthText}`
 
               <div className="ai-action-row">
                 <button type="button" className="btn-ai-parse" onClick={handleParseHealthText} disabled={aiLoading}>
-                  {aiLoading ? 'Parsing...' : 'Parse with AI'}
+                  {aiLoading ? 'Auto-filling...' : '⚡ Auto-Fill Fields'}
                 </button>
                 {healthText && (
                   <button type="button" className="btn-clear-ai" onClick={() => { setHealthText(''); setAiSuggestion(null); setAiError('') }}>
@@ -225,7 +212,7 @@ ${healthText}`
 
               {aiSuggestion && (
                 <div className="ai-suggestion-box">
-                  <strong>AI understood:</strong>
+                  <strong>Extracted note:</strong>
                   <p>{aiSuggestion}</p>
                 </div>
               )}

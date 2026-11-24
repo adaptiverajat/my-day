@@ -2,18 +2,18 @@ import { useState, useEffect } from 'react'
 
 const HealthAdviceSection = ({ healthHistory = [] }) => {
   const [healthAdvice, setHealthAdvice] = useState(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
   const [healthStats, setHealthStats] = useState(null)
 
   useEffect(() => {
     if (healthHistory && healthHistory.length > 0) {
-      calculateStats()
-      generateHealthAdvice()
+      calculateStatsAndAdvice()
+    } else {
+      setHealthStats(null)
+      setHealthAdvice(null)
     }
   }, [healthHistory])
 
-  const calculateStats = () => {
+  const calculateStatsAndAdvice = () => {
     if (healthHistory.length === 0) return
 
     const stats = {
@@ -34,16 +34,17 @@ const HealthAdviceSection = ({ healthHistory = [] }) => {
 
     healthHistory.forEach(day => {
       stats.dates.push(new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }))
-      stats.sleepPattern.push(day.sleepDuration)
-      totalSleep += day.sleepDuration
+      const sleepDur = parseFloat(day.sleepDuration) || 0
+      stats.sleepPattern.push(sleepDur)
+      totalSleep += sleepDur
 
-      if (day.workoutDuration > 0) {
+      const workoutDur = parseFloat(day.workoutDuration) || 0
+      if (workoutDur > 0) {
         stats.workoutDays++
-        totalWorkout += day.workoutDuration
+        totalWorkout += workoutDur
       }
-      stats.workoutPattern.push(day.workoutDuration)
+      stats.workoutPattern.push(workoutDur)
 
-      // Handle both old format (array of strings) and new format (array of objects)
       const meals = day.meals ? day.meals.length : (day.mealTimes ? day.mealTimes.length : 0)
       totalMeals += meals
       stats.mealPattern.push(meals)
@@ -55,82 +56,73 @@ const HealthAdviceSection = ({ healthHistory = [] }) => {
     stats.workoutFrequency = ((stats.workoutDays / stats.totalDays) * 100).toFixed(0)
 
     setHealthStats(stats)
-  }
 
-  const generateHealthAdvice = async () => {
-    try {
-      setLoading(true)
-      setError(null)
+    // Generate local, rule-based evidence-backed health advice
+    const avgSleepNum = parseFloat(stats.avgSleep) || 0
+    const workoutFreqNum = parseInt(stats.workoutFrequency, 10) || 0
+    const avgMealsNum = parseFloat(stats.avgMealsPerDay) || 0
 
-      const apiKey = import.meta.env.VITE_OPENAI_API_KEY
-      if (!apiKey) {
-        setError('OpenAI API key not configured')
-        return
-      }
-
-      // Format health history for AI analysis
-      const historyText = healthHistory.map(day => {
-        const date = new Date(day.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
-        
-        // Format meals - handle both old format (array of times) and new format (array of objects)
-        let mealsText = ''
-        if (day.meals && day.meals.length > 0) {
-          mealsText = day.meals.map(meal => `${meal.time} (${meal.detail})`).join(', ')
-        } else if (day.mealTimes) {
-          mealsText = day.mealTimes.join(', ')
-        }
-        
-        return `${date}: Sleep ${day.sleepDuration}h at ${day.sleepTime}, Workout ${day.workoutDuration || 0}h${day.workoutTime ? ' at ' + day.workoutTime : ''}, Meals: ${mealsText}`
-      }).join('\n')
-
-      const prompt = `You are a health and wellness advisor analyzing daily health tracking data. Based on the following ${healthHistory.length}-day health history, provide a comprehensive assessment and recommendations for improving lifestyle habits.
-
-Health Tracking History:
-${historyText}
-
-Please provide:
-1. Sleep Quality Assessment (pattern, consistency, sufficiency)
-2. Exercise Assessment (frequency, consistency, recommendations)
-3. Nutrition Assessment (meal timing, meal frequency, spacing)
-4. Overall Health Score (1-10 based on patterns)
-5. Positive Patterns to Maintain
-6. Areas Needing Improvement (specific and actionable)
-7. Top 3 Lifestyle Recommendations (realistic and specific)
-
-Focus on observable patterns in the historical data rather than general advice.`
-
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify({
-          model: 'gpt-3.5-turbo',
-          messages: [
-            {
-              role: 'system',
-              content: 'You are a professional health and wellness advisor. Analyze daily health data and provide evidence-based, practical, and encouraging health advice based on observed patterns.'
-            },
-            { role: 'user', content: prompt }
-          ],
-          max_tokens: 1200,
-          temperature: 0.7
-        })
-      })
-
-      const data = await response.json()
-      if (data.error) {
-        setError(`OpenAI Error: ${data.error.message}`)
-      } else {
-        const content = data.choices[0].message.content
-        setHealthAdvice(content)
-      }
-    } catch (err) {
-      setError(`Failed to generate health advice: ${err.message}`)
-    } finally {
-      setLoading(false)
+    // 1. Sleep Quality Assessment
+    let sleepAssessment = ''
+    if (avgSleepNum >= 7 && avgSleepNum <= 8.5) {
+      sleepAssessment = `Optimal sleep duration (${avgSleepNum}h average). Your rest duration aligns with recommended adult targets (7-9 hours), fostering physical restoration and mental acuity.`
+    } else if (avgSleepNum > 8.5) {
+      sleepAssessment = `Longer sleep duration (${avgSleepNum}h average). Ensure consistent bedtime and wake times to maintain an optimal circadian rhythm.`
+    } else if (avgSleepNum > 0 && avgSleepNum < 7) {
+      sleepAssessment = `Below recommended sleep duration (${avgSleepNum}h average). Target 7-8 hours per night to prevent cumulative sleep debt and improve daytime energy levels.`
+    } else {
+      sleepAssessment = 'Sleep logs not recorded consistently. Track sleep to monitor recovery.'
     }
+
+    // 2. Exercise Assessment
+    let exerciseAssessment = ''
+    if (workoutFreqNum >= 60) {
+      exerciseAssessment = `Excellent exercise consistency (${stats.workoutDays} of ${stats.totalDays} days, ${workoutFreqNum}%). Regular physical activity supports cardiovascular resilience and metabolic health.`
+    } else if (workoutFreqNum >= 35) {
+      exerciseAssessment = `Moderate physical activity (${workoutFreqNum}% of days, avg ${stats.avgWorkout}h/session). Consider adding 1-2 active sessions per week to reach 4-5 active days.`
+    } else if (workoutFreqNum > 0) {
+      exerciseAssessment = `Light physical activity (${workoutFreqNum}% of days). Aiming for at least 30 minutes of moderate activity on 3-4 days per week will significantly boost vitality.`
+    } else {
+      exerciseAssessment = 'No exercise logged in this period. Incorporating short daily walks or mobility exercises is recommended.'
+    }
+
+    // 3. Nutrition Assessment
+    let nutritionAssessment = ''
+    if (avgMealsNum >= 2.5 && avgMealsNum <= 3.5) {
+      nutritionAssessment = `Balanced meal frequency (${avgMealsNum} meals/day average). Consistent meal timing stabilizes blood sugar and energy throughout the day.`
+    } else if (avgMealsNum > 3.5) {
+      nutritionAssessment = `Frequent meals/snacks (${avgMealsNum} meals/day average). Ensure healthy nutrient density and balanced portions.`
+    } else if (avgMealsNum > 0) {
+      nutritionAssessment = `Lower meal frequency (${avgMealsNum} meals/day average). Ensure adequate protein and micronutrient intake across meals.`
+    } else {
+      nutritionAssessment = 'Nutrition not logged. Consider tracking meals to monitor dietary timing.'
+    }
+
+    // 4. Overall Health Score (1 to 10)
+    let score = 5
+    if (avgSleepNum >= 7 && avgSleepNum <= 9) score += 2
+    else if (avgSleepNum >= 6) score += 1
+
+    if (workoutFreqNum >= 60) score += 2
+    else if (workoutFreqNum >= 30) score += 1
+
+    if (avgMealsNum >= 2 && avgMealsNum <= 4) score += 1
+
+    score = Math.min(10, Math.max(1, score))
+
+    const adviceText = [
+      `1. Sleep Quality Assessment: ${sleepAssessment}`,
+      `2. Exercise & Activity: ${exerciseAssessment}`,
+      `3. Nutrition & Meal Routine: ${nutritionAssessment}`,
+      `4. Overall Lifestyle Score: ${score}/10 based on recorded sleep, activity, and nutrition habits.`,
+      `5. Positive Patterns to Maintain: Keep up regular tracking and daily routine consistency across weekdays and weekends.`,
+      `6. Key Recommendations:`,
+      `- Maintain consistent sleep schedule by sleeping and waking within a 30-minute window daily.`,
+      `- Aim for at least 150 minutes of moderate physical activity or 75 minutes of vigorous exercise weekly.`,
+      `- Hydrate adequately and keep meal intervals evenly spaced throughout your active day.`
+    ].join('\n')
+
+    setHealthAdvice(adviceText)
   }
 
   if (!healthHistory || healthHistory.length === 0) {
@@ -138,30 +130,6 @@ Focus on observable patterns in the historical data rather than general advice.`
       <div className="health-advice-section">
         <h2>🏥 Health & Wellness Assessment</h2>
         <p className="health-no-data">No health data logged yet. Start tracking daily activities to build your health report.</p>
-      </div>
-    )
-  }
-
-  if (loading) {
-    return (
-      <div className="health-advice-section">
-        <h2>🏥 Health & Wellness Assessment</h2>
-        <div className="loading-message">
-          <p>Analyzing {healthHistory.length} days of health data...</p>
-          <div className="loading-spinner"></div>
-        </div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="health-advice-section">
-        <h2>🏥 Health & Wellness Assessment</h2>
-        <div className="error-box">
-          <p className="error-message">{error}</p>
-          <p className="error-hint">Make sure VITE_OPENAI_API_KEY is set in your .env file</p>
-        </div>
       </div>
     )
   }

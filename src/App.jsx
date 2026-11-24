@@ -191,7 +191,7 @@ function Calendar() {
         </div>
       )}
       <div className="header-row">
-        <CalendarHeader onVoiceInputClick={() => setShowVoiceInput(true)} onHelpClick={() => setShowHelp(true)} onSecretModeToggle={setSecretMode} />
+        <CalendarHeader onVoiceInputClick={() => setShowVoiceInput(true)} onHelpClick={() => setShowHelp(true)} onSecretModeToggle={setSecretMode} secretMode={secretMode} />
         <ViewControls currentView={currentView} setCurrentView={setCurrentView} setCurrentDate={setCurrentDate} viewDensity={viewDensity} setViewDensity={setViewDensity} />
         <div className="date-display">
           <div className="digital-clock">
