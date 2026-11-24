@@ -1,0 +1,132 @@
+.task-date {
+  font-size: 1.2vw;
+  color: #a0a0a0;
+  opacity: 0.8;
+}
+
+.task-list {
+  flex: 1;
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2vh;
+}
+
+.task-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.3vh 0.5vw;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+  border-left: 2px solid #4facfe;
+  transition: background 0.2s ease;
+}
+
+.task-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.task-time {
+  font-size: 0.8vw;
+  font-weight: 600;
+  color: #4facfe;
+  white-space: nowrap;
+}
+
+.task-title {
+  font-size: 0.75vw;
+  color: #e0e0e0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: right;
+  flex: 1;
+  margin-left: 0.5vw;
+}
+
+.no-tasks {
+  font-size: 0.7vw;
+  color: #808080;
+  text-align: center;
+  padding: 1vh 0;
+  font-style: italic;
+}
+
+.tooltip-tasks-title {
+  margin: 8px 0 4px 0;
+  font-weight: 600;
+  color: #555;
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.tooltip-tasks-list {
+  margin: 0;
+  padding-left: 15px;
+  list-style-type: disc;
+}
+
+.tooltip-tasks-list li {
+  font-size: 11px;
+  color: #666;
+  margin-bottom: 2px;
+}
+
+/* Voice Input Modal Styles */
+.voice-input-modal {
+  max-width: 700px;
+}
+
+.voice-input-textarea {
+  min-height: 100px;
+  resize: vertical;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.btn-parse {
+  background: #6c5ce7;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.3s ease;
+  margin-top: 10px;
+}
+
+.btn-parse:hover {
+  background: #5b4cdb;
+}
+
+.btn-parse:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.parsed-tasks-section {
+  margin-top: 20px;
+}
+
+.parsed-tasks-section h3 {
+  margin: 0 0 15px 0;
+  color: #333;
+  font-size: 1.1rem;
+}
+
+.parsed-tasks-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+  background: white;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid #e0e0e0;
+}
+
+.parsed-tasks-table thead {
+  background: #f8f9fa;
+}

@@ -1,0 +1,132 @@
+/* Tabular Data Table */
+.jd-table-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 24px;
+}
+
+.jd-table-scroll-wrap {
+  overflow-x: auto;
+  width: 100%;
+}
+
+.jd-table-scroll-wrap::-webkit-scrollbar {
+  height: 8px;
+}
+.jd-table-scroll-wrap::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+.jd-table-scroll-wrap::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+.jd-table-scroll-wrap::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.jd-tabular-table {
+  width: 100%;
+  min-width: 1050px;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.88rem;
+  text-align: left;
+}
+
+.jd-tabular-table thead th {
+  background: #f1f5f9;
+  padding: 13px 16px;
+  font-weight: 700;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #475569;
+  border-bottom: 2px solid #cbd5e1;
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.jd-tabular-table tbody tr {
+  border-bottom: 1px solid #f1f5f9;
+  transition: background-color 0.12s ease;
+}
+
+.jd-tabular-table tbody tr:nth-child(even) {
+  background-color: #fafbfc;
+}
+
+.jd-tabular-table tbody tr:hover {
+  background-color: #eff6ff;
+}
+
+.jd-tabular-table tbody td {
+  padding: 14px 16px;
+  color: #1e293b;
+  vertical-align: middle;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.jd-table-loc-title {
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: #0f172a;
+}
+
+.jd-table-sub {
+  font-size: 0.78rem;
+  color: #64748b;
+  display: block;
+  margin-top: 3px;
+}
+
+.jd-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.15s ease;
+}
+
+.jd-status-pill.paid {
+  background: #dcfce7;
+  color: #15803d;
+  border-color: #86efac;
+}
+
+.jd-status-pill.paid:hover {
+  background: #bbf7d0;
+}
+
+.jd-status-pill.pending {
+  background: #fef3c7;
+  color: #b45309;
+  border-color: #fde68a;
+}
+
+.jd-status-pill.pending:hover {
+  background: #fde68a;
+}
+
+.jd-books-pill {
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-weight: 600;
+  font-size: 0.82rem;
+  padding: 4px 10px;
+  border-radius: 6px;
+  display: inline-block;
+  white-space: nowrap;
+}

@@ -1,0 +1,134 @@
+.add-todo-btn {
+  padding: 4px 8px;
+  background: black;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.add-todo-btn:hover {
+  background: #0056b3;
+}
+
+.todo-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.todo-item {
+  display: flex;
+  align-items: center;
+  padding: 6px;
+  border-bottom: 1px solid #f0f0f0;
+  gap: 8px;
+}
+
+.todo-item:last-child {
+  border-bottom: none;
+}
+
+.todo-item.completed .todo-text {
+  text-decoration: line-through;
+  color: #999;
+}
+
+.todo-checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.todo-text {
+  flex: 1;
+  font-size: 13px;
+  color: #333;
+  text-align: left;
+}
+
+.todo-text:not(.completed) {
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 2px;
+  transition: background 0.2s;
+}
+
+.todo-text:not(.completed):hover {
+  background: #f0f0f0;
+}
+
+.todo-edit-input {
+  flex: 1;
+  margin: 0 10px;
+  padding: 4px 8px;
+  border: 1px solid #2196f3;
+  border-radius: 3px;
+  font-size: 13px;
+  outline: none;
+}
+
+.save-todo-btn {
+  background: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-right: 4px;
+}
+
+.save-todo-btn:hover {
+  background: #45a049;
+}
+
+.cancel-todo-btn {
+  background: #ff9800;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.cancel-todo-btn:hover {
+  background: #f57c00;
+}
+
+.delete-todo-btn {
+  background: none;
+  border: none;
+  color: #dc3545;
+  cursor: pointer;
+  font-size: 18px;
+  padding: 0 4px;
+}
+
+.delete-todo-btn:hover {
+  color: #a71d2a;
+}
+
+.no-todos {
+  text-align: center;
+  padding: 20px;
+  color: #999;
+  font-size: 13px;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}

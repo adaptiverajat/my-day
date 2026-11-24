@@ -1,5 +1,7 @@
 import React from 'react'
 import AppLogoMenu from '../AppLogoMenu'
+import JivanDishaTabs from './JivanDishaTabs'
+import JivanDishaHeaderActions from './JivanDishaHeaderActions'
 
 export default function JivanDishaHeader({
   dbConnected,
@@ -51,152 +53,30 @@ export default function JivanDishaHeader({
         subtitle={`Book Orders & Operations Map • 📚 Total Books Sent: ${totalBooks}`}
       />
 
-      {/* Main Tab Switcher */}
-      <div className="jd-main-tabs">
-        <button
-          type="button"
-          className={`jd-main-tab-btn ${mainTab === 'maps' ? 'active' : ''}`}
-          onClick={() => setMainTab('maps')}
-          title="Interactive Operations Map"
-        >
-          <span className="tab-icon">🗺️</span>
-          <span className="tab-label">Maps</span>
-          <span className="tab-count-badge">{locationsCount}</span>
-        </button>
-        <button
-          type="button"
-          className={`jd-main-tab-btn ${mainTab === 'invoices' ? 'active' : ''}`}
-          onClick={() => {
-            setMainTab('invoices')
-            handleRefreshInvoices?.()
-          }}
-          title="Invoices Tabular View & Auto-Parser"
-        >
-          <span className="tab-icon">📄</span>
-          <span className="tab-label">Invoices</span>
-          <span className="tab-count-badge">{displayInvoicesCount}</span>
-        </button>
-        <button
-          type="button"
-          className={`jd-main-tab-btn ${mainTab === 'contacts' ? 'active' : ''}`}
-          onClick={() => setMainTab('contacts')}
-          title="Contacts, Follow-up Dates & Remarks"
-        >
-          <span className="tab-icon">👥</span>
-          <span className="tab-label">Contacts & Follow-ups</span>
-          <span className="tab-count-badge">{locationsCount}</span>
-        </button>
-        <button
-          type="button"
-          className={`jd-main-tab-btn ${mainTab === 'collections' ? 'active' : ''}`}
-          onClick={() => {
-            setMainTab('collections')
-            handleRefreshCollections?.()
-          }}
-          title="Individual Collection Records & Excel Import"
-        >
-          <span className="tab-icon">👤</span>
-          <span className="tab-label">Individual Collection</span>
-          <span className="tab-count-badge">{individualCollectionsCount}</span>
-        </button>
-      </div>
+      <JivanDishaTabs
+        mainTab={mainTab}
+        setMainTab={setMainTab}
+        locationsCount={locationsCount}
+        displayInvoicesCount={displayInvoicesCount}
+        individualCollectionsCount={individualCollectionsCount}
+        handleRefreshInvoices={handleRefreshInvoices}
+        handleRefreshCollections={handleRefreshCollections}
+      />
 
-      <div className="jd-header-actions">
-        {mainTab === 'maps' && (
-          <>
-            {/* View mode switcher */}
-            <div className="jd-view-mode-group">
-              <button
-                className={`jd-mode-btn ${viewMode === 'side-by-side' ? 'active' : ''}`}
-                onClick={() => setViewMode('side-by-side')}
-                title="View India & USA side-by-side"
-              >
-                Side-by-Side
-              </button>
-              <button
-                className={`jd-mode-btn ${viewMode === 'focus-india' ? 'active' : ''}`}
-                onClick={() => setViewMode('focus-india')}
-                title="Focus on India"
-              >
-                🇮🇳 India
-              </button>
-              <button
-                className={`jd-mode-btn ${viewMode === 'focus-usa' ? 'active' : ''}`}
-                onClick={() => setViewMode('focus-usa')}
-                title="Focus on USA"
-              >
-                🇺🇸 USA
-              </button>
-            </div>
-
-            {/* Add Pin Manually Button */}
-            <button
-              className="jd-btn primary"
-              onClick={handleAddLocation}
-            >
-              + Add Location
-            </button>
-
-            {/* Import Multiple PDFs Button */}
-            <button
-              className="jd-btn jd-btn-batch-import"
-              onClick={handleBatchImport}
-              title="Import multiple invoice PDFs to create multiple locations at once"
-            >
-              📑 Import Multiple PDFs
-            </button>
-
-            {/* Export JSON */}
-            <button className="jd-btn" onClick={handleExport} title="Download JSON backup">
-              💾 Export JSON
-            </button>
-
-            {/* Toggle Sidebar */}
-            <button
-              className="jd-btn"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              title="Toggle Locations Sidebar"
-            >
-              {sidebarOpen ? 'Hide List ❯' : '❮ Show List'}
-            </button>
-          </>
-        )}
-
-        {mainTab === 'invoices' && (
-          <button
-            className="jd-btn"
-            onClick={handleRefreshInvoices}
-            title="Refresh Invoices List"
-          >
-            🔄 Refresh Invoices
-          </button>
-        )}
-
-        {mainTab === 'contacts' && (
-          <button
-            className="jd-btn"
-            onClick={handleRefreshContacts}
-            title="Refresh Contacts List"
-          >
-            🔄 Refresh Contacts
-          </button>
-        )}
-
-        {mainTab === 'collections' && (
-          <button
-            className="jd-btn"
-            onClick={handleRefreshCollections}
-            title="Refresh Individual Collections List"
-          >
-            🔄 Refresh Collections
-          </button>
-        )}
-
-        {/* Back to Calendar */}
-        <button className="jd-btn nav-back" onClick={handleBackToCalendar}>
-          ← Calendar
-        </button>
-      </div>
+      <JivanDishaHeaderActions
+        mainTab={mainTab}
+        viewMode={viewMode}
+        setViewMode={setViewMode}
+        handleAddLocation={handleAddLocation}
+        handleBatchImport={handleBatchImport}
+        handleExport={handleExport}
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
+        handleRefreshInvoices={handleRefreshInvoices}
+        handleRefreshContacts={handleRefreshContacts}
+        handleRefreshCollections={handleRefreshCollections}
+        handleBackToCalendar={handleBackToCalendar}
+      />
     </header>
   )
 }

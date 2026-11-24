@@ -7,11 +7,21 @@ const CalendarHeader = ({ onVoiceInputClick, onHelpClick, onSecretModeToggle, se
       <AppLogoMenu
         title="Rajat's calendar"
         currentScreen="calendar"
-        onVoiceInputClick={onVoiceInputClick}
         onHelpClick={onHelpClick}
         secretMode={secretMode}
         onSecretModeToggle={onSecretModeToggle}
       />
+      {onVoiceInputClick && (
+        <button
+          type="button"
+          className="calendar-voice-btn"
+          onClick={onVoiceInputClick}
+          title="Voice Input (Dictate tasks/events)"
+        >
+          <span className="calendar-voice-icon">🎤</span>
+          <span className="calendar-voice-text">Voice Input</span>
+        </button>
+      )}
     </header>
   )
 }

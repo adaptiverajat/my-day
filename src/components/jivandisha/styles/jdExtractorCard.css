@@ -1,0 +1,137 @@
+.jd-kpi-card.blue .jd-kpi-icon-wrap {
+  background: #eff6ff;
+  color: #2563eb;
+}
+.jd-kpi-card.emerald .jd-kpi-icon-wrap {
+  background: #ecfdf5;
+  color: #059669;
+}
+.jd-kpi-card.amber .jd-kpi-icon-wrap {
+  background: #fffbeb;
+  color: #d97706;
+}
+.jd-kpi-card.purple .jd-kpi-icon-wrap {
+  background: #faf5ff;
+  color: #9333ea;
+}
+.jd-kpi-card.rose .jd-kpi-icon-wrap {
+  background: #fff1f2;
+  color: #e11d48;
+}
+
+.jd-kpi-content {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.jd-kpi-title {
+  font-size: 0.74rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #64748b;
+  margin-bottom: 2px;
+}
+
+.jd-kpi-value {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+.jd-kpi-sub {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+/* ==================== INVOICES VIEW SPECIFICS ==================== */
+
+/* Textarea Extractor Card */
+.jd-extractor-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+  flex-shrink: 0;
+  text-align: left;
+}
+
+.jd-extractor-header {
+  padding: 14px 20px;
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  text-align: left;
+}
+
+.jd-extractor-title-area {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+}
+
+.jd-extractor-badge-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: #6366f1;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+}
+
+.jd-extractor-heading {
+  font-size: 0.96rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  text-align: left;
+}
+
+.jd-extractor-subheading {
+  font-size: 0.78rem;
+  color: #64748b;
+  margin: 2px 0 0 0;
+  text-align: left;
+}
+
+.jd-extractor-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.jd-extractor-body {
+  padding: 16px 20px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+  text-align: left;
+}
+
+@media (max-width: 1024px) {
+  .jd-extractor-body {
+    grid-template-columns: 1fr;
+  }
+}
+
+.jd-extractor-left-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  text-align: left;
+}

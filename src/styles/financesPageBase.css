@@ -1,0 +1,132 @@
+.finances-header {
+  background: white;
+  padding: 10px 24px;
+  border-bottom: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  flex-shrink: 0;
+}
+
+.finances-header h1 {
+  margin: 0;
+  color: #333;
+  font-size: 28px;
+  font-weight: 600;
+}
+
+.finances-header-controls {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-back {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.3s ease;
+}
+
+.btn-back:hover {
+  background: #5a6268;
+}
+
+.finances-content {
+  flex: 1;
+  padding: 20px 30px;
+  overflow-y: auto;
+}
+
+.finances-upload-section {
+  background: white;
+  padding: 15px 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.finances-assets-section {
+  background: white;
+  padding: 15px 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.assets-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin: 15px 0;
+  min-height: 60px;
+  padding: 10px;
+  border-radius: 8px;
+  border: 2px dashed transparent;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.assets-drop-zone {
+  border-color: #e0e0e0;
+}
+
+.assets-drop-zone-excluded {
+  border-color: #ffcc80;
+  background: #fff8e1;
+}
+
+.assets-grid.drag-over {
+  border-color: #1976d2 !important;
+  background: #e3f2fd !important;
+}
+
+.assets-subsection-header {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin: 15px 0 5px 0;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.assets-subheader-excluded {
+  margin-top: 25px;
+  color: #e65100;
+}
+
+.asset-excluded {
+  opacity: 0.6;
+}
+
+.asset-card.dragging {
+  opacity: 0.3;
+}
+
+.asset-card {
+  cursor: grab;
+}
+
+.asset-card:active {
+  cursor: grabbing;
+}
+
+.btn-add-excluded-asset {
+  background: #ff9800;
+}
+
+.btn-add-excluded-asset:hover {
+  background: #f57c00;
+}
+
+.no-assets {
+  color: #999;
+  font-style: italic;
+  padding: 20px;
+}

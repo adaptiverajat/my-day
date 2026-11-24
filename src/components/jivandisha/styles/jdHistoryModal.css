@@ -1,0 +1,140 @@
+/* Contacts Section */
+.jd-contacts-section {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.jd-contacts-section .jd-form-input-box input {
+  flex: 1;
+  min-width: 0;
+}
+
+.jd-contacts-title {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #334155;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* History Button in Popup & Sidebar */
+.jd-popup-btn.history {
+  background: #ede9fe;
+  color: #5b21b6;
+  border-color: #ddd6fe;
+}
+
+.jd-popup-btn.history:hover {
+  background: #ddd6fe;
+}
+
+.jd-loc-action-btn.history {
+  color: #6d28d9;
+}
+
+.jd-loc-action-btn.history:hover {
+  background: #f5f3ff;
+}
+
+/* History Modal */
+.jd-history-modal-card {
+  max-width: 760px;
+  height: min(580px, calc(100vh - 40px));
+}
+
+.jd-history-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.jd-history-stat-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px 14px;
+  text-align: center;
+}
+
+.jd-stat-number {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.jd-stat-label {
+  font-size: 0.72rem;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+/* Add Invoice Section inside History */
+.jd-add-invoice-card {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 16px;
+}
+
+.jd-add-invoice-card h4 {
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin: 0 0 10px 0;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.jd-add-inv-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+/* Invoice History Table */
+.jd-history-table-wrapper {
+  overflow-x: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.jd-history-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+  text-align: left;
+}
+
+.jd-history-table th {
+  background: #f8fafc;
+  color: #475569;
+  font-weight: 600;
+  padding: 8px 12px;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.jd-history-table td {
+  padding: 9px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #1e293b;
+  vertical-align: middle;
+}
+
+.jd-history-table tr:hover {
+  background: #f8fafc;
+}

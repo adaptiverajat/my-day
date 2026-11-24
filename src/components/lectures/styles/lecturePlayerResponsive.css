@@ -1,0 +1,37 @@
+/* Close Player */
+.player-close-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+
+.player-close-btn:hover {
+  background: #334155;
+  color: #ef4444;
+}
+
+/* Responsive Audio Player */
+@media (max-width: 900px) {
+  .player-dock-content {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .player-track-info {
+    max-width: 100%;
+    order: 1;
+  }
+  .player-controls-center {
+    order: 2;
+    min-width: 100%;
+  }
+  .player-actions-right {
+    order: 3;
+    min-width: 100%;
+    justify-content: space-between;
+  }
+}

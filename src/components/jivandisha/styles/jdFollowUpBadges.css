@@ -1,0 +1,139 @@
+/* Follow-up Badges */
+.jd-fu-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.jd-fu-badge.overdue {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fca5a5;
+}
+
+.jd-fu-badge.today {
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+.jd-fu-badge.upcoming {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+
+.jd-fu-badge.none {
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+}
+
+.jd-table-remarks {
+  max-width: 280px;
+  font-size: 0.76rem;
+  color: #475569;
+  line-height: 1.4;
+  white-space: normal;
+}
+
+/* Quick Follow-up Preset Pills */
+.jd-preset-pills-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.jd-preset-pill {
+  padding: 3px 8px;
+  font-size: 0.74rem;
+  font-weight: 500;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.jd-preset-pill:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+.jd-preset-pill.clear {
+  color: #b91c1c;
+  border-color: #fca5a5;
+  background: #fff5f5;
+}
+
+.jd-preset-pill.clear:hover {
+  background: #fee2e2;
+}
+
+/* Duplicate Invoice Validation & Prompt Modal */
+.jd-duplicate-alert {
+  background: #fffbeb;
+  border: 1.5px solid #fde68a;
+  border-radius: 8px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+}
+
+.jd-duplicate-alert-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: #92400e;
+  line-height: 1.4;
+}
+
+.jd-duplicate-alert-icon {
+  font-size: 1.05rem;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.jd-duplicate-alert-items {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.jd-dup-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.76rem;
+  background: #ffffff;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid #fde68a;
+  flex-wrap: wrap;
+  text-align: left;
+}
+
+.jd-dup-item-num {
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.jd-dup-item-loc {
+  font-weight: 600;
+  color: #475569;
+}
+
+.jd-dup-item-date {
+  color: #b45309;
+}

@@ -1,0 +1,26 @@
+/* Transcript button in audio player dock */
+.player-transcript-btn {
+  background: #1e293b;
+  border: 1px solid #334155;
+  color: #cbd5e1;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.player-transcript-btn:hover {
+  background: #334155;
+  color: #ffffff;
+}
+
+.player-transcript-btn.active {
+  background: #4338ca;
+  color: #ffffff;
+  border-color: #6366f1;
+}
+
+

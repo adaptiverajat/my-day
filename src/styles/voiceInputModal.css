@@ -1,0 +1,140 @@
+.parsed-tasks-table th {
+  padding: 10px;
+  text-align: left;
+  font-weight: 600;
+  color: #333;
+  font-size: 12px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.parsed-tasks-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 13px;
+  color: #333;
+}
+
+.parsed-tasks-table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+.parsed-tasks-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.parsed-tasks-table thead {
+  background: #6c5ce7;
+  color: white;
+}
+
+.parsed-tasks-table th {
+  padding: 10px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.parsed-tasks-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #e0e0e0;
+  font-size: 13px;
+}
+
+.parsed-tasks-table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+.parsed-tasks-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .charts-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .stats-table {
+    font-size: 11px;
+  }
+  
+  .stats-table th, .stats-table td {
+    padding: 8px;
+  }
+  
+  .summary-cards {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.task-item-time.recurring {
+  border-left: 4px solid #17a2b8;
+}
+
+.task-item-large.recurring {
+  border-left: 4px solid #17a2b8;
+}
+
+.mini-task.recurring {
+  border-left: 2px solid #17a2b8;
+}
+
+.recurring-indicator {
+  display: inline-block;
+  margin-left: 5px;
+  font-size: 14px;
+  color: #17a2b8;
+  font-weight: bold;
+}
+
+/* Help Modal Styles */
+.help-modal {
+  background: white;
+  padding: 0;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 700px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.help-header {
+  padding: 20px;
+  border-bottom: 2px solid black;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f8f9fa;
+  border-radius: 8px 8px 0 0;
+  flex-shrink: 0;
+}
+
+.help-header h2 {
+  margin: 0;
+  color: black;
+  font-size: 1.5rem;
+}
+
+.help-close-btn {
+  background: none;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+  color: #666;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+}
+
+.help-close-btn:hover {
+  color: #333;
+}

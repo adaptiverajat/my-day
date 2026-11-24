@@ -1,0 +1,137 @@
+.btn-import {
+  background: #4caf50;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: background 0.3s ease;
+}
+
+.btn-import:hover {
+  background: #45a049;
+}
+
+.btn-import:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.parsing-indicator {
+  margin-top: 15px;
+  padding: 10px;
+  background: #e3f2fd;
+  border-radius: 4px;
+  color: #1976d2;
+  font-size: 14px;
+  text-align: center;
+}
+
+.finances-table-container {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.table-navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.nav-month-btn {
+  padding: 6px 12px;
+  background: #4f46e5;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.2s;
+}
+
+.nav-month-btn:hover:not(:disabled) {
+  background: #4338ca;
+}
+
+.nav-month-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.nav-month-info {
+  font-size: 13px;
+  color: #666;
+  font-weight: 500;
+}
+
+.finances-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.finances-table thead {
+  background: #f8f9fa;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.finances-table th {
+  padding: 15px;
+  text-align: left;
+  font-weight: 600;
+  color: #333;
+  font-size: 14px;
+  border-right: 1px solid #e0e0e0;
+}
+
+.finances-table th:last-child {
+  border-right: none;
+}
+
+.finances-table tbody tr {
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.finances-table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+.finances-table tbody tr.selected-month {
+  background: #e3f2fd;
+}
+
+.finances-table td {
+  padding: 15px;
+  border-right: 1px solid #e0e0e0;
+  vertical-align: top;
+}
+
+.finances-table td:last-child {
+  border-right: none;
+}
+
+.col-timeline {
+  width: 15%;
+  min-width: 120px;
+}
+
+.col-income {
+  width: 20%;
+  min-width: 150px;
+}
+
+.col-expenses {
+  width: 25%;
+  min-width: 200px;
+}
+
+.col-savings {
+  width: 20%;
+  min-width: 150px;
+}

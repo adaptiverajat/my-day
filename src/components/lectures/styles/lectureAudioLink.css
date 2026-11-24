@@ -1,0 +1,53 @@
+/* ID column audio playback button/link */
+.lecture-id-plain {
+  font-weight: 600;
+  color: #475569;
+}
+
+.lecture-id-audio-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid #3b82f6;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-weight: 700;
+  font-size: 0.82rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-decoration: none;
+}
+
+.lecture-id-audio-btn:hover {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #1d4ed8;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(37, 99, 235, 0.25);
+}
+
+.lecture-id-audio-btn .audio-play-icon {
+  font-size: 0.75rem;
+  line-height: 1;
+}
+
+.lecture-id-audio-btn.playing {
+  background: #10b981;
+  color: #ffffff;
+  border-color: #059669;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.3);
+  animation: pulse-playing 1.5s infinite alternate ease-in-out;
+}
+
+@keyframes pulse-playing {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.05); }
+}
+
+/* Page bottom buffer when audio dock is visible */
+.lectures-page.with-player {
+  padding-bottom: 90px;
+}

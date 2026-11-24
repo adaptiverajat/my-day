@@ -1,0 +1,136 @@
+/* Right: Actions, Speed, Volume & Close */
+.player-actions-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 260px;
+  justify-content: flex-end;
+  flex: 1;
+}
+
+.player-heard-btn {
+  background: #1e293b;
+  border: 1px solid #334155;
+  color: #cbd5e1;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.player-heard-btn:hover {
+  background: #334155;
+  color: #ffffff;
+}
+
+.player-heard-btn.completed {
+  background: #064e3b;
+  border-color: #059669;
+  color: #34d399;
+}
+
+.player-heard-btn.completed:hover {
+  background: #047857;
+  color: #ffffff;
+}
+
+/* Speed control */
+.player-speed-wrapper {
+  position: relative;
+}
+
+.player-speed-btn {
+  background: #1e293b;
+  border: 1px solid #334155;
+  color: #cbd5e1;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.player-speed-btn:hover {
+  background: #334155;
+  color: #ffffff;
+}
+
+.player-speed-menu {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  right: 0;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  z-index: 100;
+  min-width: 80px;
+}
+
+.speed-menu-item {
+  background: transparent;
+  border: none;
+  color: #cbd5e1;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  text-align: center;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.speed-menu-item:hover {
+  background: #334155;
+  color: #ffffff;
+}
+
+.speed-menu-item.active {
+  background: #3b82f6;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+/* Volume */
+.player-volume-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.player-volume-icon {
+  background: transparent;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 2px;
+  line-height: 1;
+}
+
+.player-volume-slider {
+  width: 70px;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: #334155;
+  border-radius: 4px;
+  outline: none;
+  cursor: pointer;
+}
+
+.player-volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #cbd5e1;
+  cursor: pointer;
+}

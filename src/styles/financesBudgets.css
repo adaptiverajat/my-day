@@ -1,0 +1,139 @@
+.end-date-info {
+  margin-bottom: 20px;
+  padding: 15px;
+  background: #e3f2fd;
+  border-radius: 4px;
+  border: 1px solid #2196f3;
+}
+
+.end-date-info p {
+  margin: 5px 0;
+  color: #1976d2;
+  font-size: 14px;
+}
+
+.end-date-info em {
+  color: #1565c0;
+  font-size: 12px;
+}
+
+.parsed-data-section {
+  margin-bottom: 20px;
+  padding: 15px;
+  background: #e8f5e9;
+  border-radius: 4px;
+  border: 1px solid #4caf50;
+}
+
+.parsed-data-section h4 {
+  margin: 0 0 10px 0;
+  color: #2e7d32;
+  font-size: 14px;
+}
+
+.parsed-data-display {
+  font-size: 13px;
+  color: #333;
+}
+
+.parsed-data-display p {
+  margin: 5px 0;
+}
+
+.parsed-data-display ul {
+  margin: 5px 0;
+  padding-left: 20px;
+}
+
+.expenses-edit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.expense-edit-item {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.expense-name-input {
+  flex: 2;
+  min-width: 200px;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.expense-amount-input {
+  flex: 1;
+  min-width: 100px;
+  max-width: 150px;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.btn-remove-expense {
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background 0.3s ease;
+}
+
+.btn-remove-all-expenses {
+  background: #721c24;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background 0.3s ease;
+}
+
+.btn-remove-all-expenses:hover {
+  background: #5a171e;
+}
+
+.expense-edit-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 5px;
+}
+
+.smart-remove-section {
+  margin-bottom: 20px;
+  padding: 15px;
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 4px;
+}
+
+.smart-remove-section label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: bold;
+  color: #856404;
+}
+
+.smart-remove-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.smart-remove-input {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 13px;
+}

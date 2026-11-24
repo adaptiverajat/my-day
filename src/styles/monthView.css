@@ -1,0 +1,135 @@
+.month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  flex: 1;
+  overflow-y: auto;
+}
+
+.month-day {
+  min-height: 80px;
+  padding: 5px;
+  border-right: 1px solid #e0e0e0;
+  border-bottom: 1px solid #e0e0e0;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.month-day:hover {
+  background: #f8f9fa;
+}
+
+.month-day.empty {
+  background: #fafafa;
+  cursor: default;
+}
+
+.month-day-number {
+  font-size: 12px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 3px;
+}
+
+.month-day-tasks {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mini-task {
+  background: #e3f2fd;
+  padding: 2px 4px;
+  border-radius: 2px;
+  font-size: 10px;
+  color: #1976d2;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mini-task:hover {
+  opacity: 0.8;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.more-tasks {
+  font-size: 9px;
+  color: #666;
+}
+
+/* Year View Styles */
+.year-view {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+  background: white;
+  margin: 5px 0;
+}
+
+.year-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+  gap: 10px;
+}
+
+.year-month {
+  background: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 15px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.year-month:hover {
+  background: #e3f2fd;
+  border-color: #2196f3;
+}
+
+.year-month-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 5px;
+}
+
+.year-month-tasks {
+  font-size: 12px;
+  color: #666;
+}
+
+/* To-Do List Styles */
+.todo-section {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  margin: 5px 0;
+  display: flex;
+  flex-direction: column;
+  max-height: 150px;
+  flex-shrink: 0;
+}
+
+.todo-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.todo-header h3 {
+  margin: 0;
+  font-size: 14px;
+  color: #333;
+}

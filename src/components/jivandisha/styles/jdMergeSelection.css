@@ -1,0 +1,138 @@
+.jd-verify-badge.clean {
+  color: #16a34a;
+  background: #ecfdf5;
+}
+
+.jd-verify-actions-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 20px;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  flex-wrap: wrap;
+}
+
+.jd-verify-footer-left {
+  font-size: 0.82rem;
+  color: #475569;
+}
+
+/* ==================== DUPLICATE RECORD MERGE UI ==================== */
+
+/* Highlight selected row in tables */
+.jd-tabular-table tbody tr.jd-row-selected {
+  background-color: #f5f3ff !important;
+  box-shadow: inset 3px 0 0 #7c3aed;
+}
+
+.jd-tabular-table tbody tr.jd-row-selected:hover {
+  background-color: #ede9fe !important;
+}
+
+/* Toolbar Merge Trigger Pill */
+.jd-merge-toolbar-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  background: #fbf7ff;
+  border: 1px solid #ddd6fe;
+  border-radius: 8px;
+  animation: jdFadeIn 0.2s ease;
+}
+
+.jd-merge-count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #7c3aed;
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 12px;
+  letter-spacing: 0.02em;
+}
+
+.jd-merge-instruction {
+  font-size: 0.78rem;
+  color: #6d28d9;
+  font-weight: 500;
+}
+
+.jd-btn-merge-action {
+  background: #7c3aed !important;
+  border-color: #6d28d9 !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  font-size: 0.8rem !important;
+  padding: 6px 14px !important;
+  box-shadow: 0 1px 3px rgba(124, 58, 237, 0.25) !important;
+  transition: all 0.15s ease !important;
+}
+
+.jd-btn-merge-action:hover {
+  background: #6d28d9 !important;
+  border-color: #5b21b6 !important;
+  transform: translateY(-1px);
+}
+
+/* Merge Modal Comparison Cards */
+.jd-merge-modal-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-height: 72vh;
+  overflow-y: auto;
+  padding: 16px 20px;
+}
+
+.jd-merge-records-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+@media (max-width: 640px) {
+  .jd-merge-records-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.jd-merge-record-card {
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 14px;
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  position: relative;
+}
+
+.jd-merge-record-card:hover {
+  border-color: #cbd5e1;
+}
+
+.jd-merge-record-card.is-primary {
+  border-color: #059669;
+  background: #f0fdf4;
+}
+
+.jd-merge-record-card.is-duplicate {
+  border-color: #f87171;
+  background: #fffdfd;
+}
+
+.jd-merge-record-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  padding-bottom: 8px;
+}

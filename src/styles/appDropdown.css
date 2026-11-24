@@ -1,0 +1,134 @@
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropdown-section-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+  padding: 6px 10px 4px 10px;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #334155;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.dropdown-item:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.dropdown-item.active {
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-weight: 600;
+}
+
+.dropdown-item.active:hover {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.dropdown-item-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dropdown-item-icon {
+  font-size: 15px;
+  width: 20px;
+  text-align: center;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.dropdown-item-label {
+  line-height: 1.2;
+}
+
+.dropdown-active-dot {
+  font-size: 8px;
+  color: #2563eb;
+  margin-left: 6px;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: #e2e8f0;
+  margin: 4px 0;
+}
+
+.dropdown-item-secret {
+  background: #fee2e2;
+  color: #991b1b;
+  font-weight: 600;
+}
+
+.dropdown-item-secret:hover {
+  background: #fecaca;
+  color: #7f1d1d;
+}
+
+.header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 10px;
+  background: white;
+  border-bottom: 1px solid #e0e0e0;
+  flex-shrink: 0;
+  gap: 10px;
+}
+
+.view-controls {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  background: white;
+}
+
+.view-btn {
+  padding: 5px 10px;
+  border: 1px solid #ddd;
+  background: white;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.3s ease;
+}
+
+.view-btn:hover {
+  background: #f5f5f5;
+}
+
+.view-btn.active {
+  background: black;
+  color: white;
+  border-color: black;
+}

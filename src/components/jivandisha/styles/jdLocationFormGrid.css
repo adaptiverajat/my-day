@@ -1,0 +1,137 @@
+/* Modal Body with Mandatory Vertical Scroll */
+.jd-modal-body {
+  padding: 16px 20px;
+  overflow-y: scroll !important;
+  overflow-x: hidden;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: #94a3b8 #f1f5f9;
+}
+
+/* Visible Custom Vertical Scrollbar */
+.jd-modal-body::-webkit-scrollbar {
+  width: 9px;
+}
+
+.jd-modal-body::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 6px;
+}
+
+.jd-modal-body::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 6px;
+  border: 2px solid #f1f5f9;
+}
+
+.jd-modal-body::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* 2-Column Grid of Form Rows */
+.jd-form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 20px;
+}
+
+/* Horizontal Row: Label on Left, Input on Right */
+.jd-form-row-h {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.jd-form-row-h.top-align {
+  align-items: flex-start;
+}
+
+.jd-form-row-h > label {
+  width: 135px;
+  min-width: 135px;
+  text-align: right;
+  font-size: 0.77rem;
+  font-weight: 600;
+  color: #334155;
+  line-height: 1.25;
+}
+
+.jd-form-row-h > .jd-form-input-box {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  min-width: 0;
+}
+
+.jd-form-row-h > .jd-form-input-box input,
+.jd-form-row-h > .jd-form-input-box select,
+.jd-form-row-h > .jd-form-input-box textarea {
+  width: 100%;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  font-size: 0.82rem;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.jd-form-row-h > .jd-form-input-box input:focus,
+.jd-form-row-h > .jd-form-input-box select:focus,
+.jd-form-row-h > .jd-form-input-box textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+.jd-form-row-h > .jd-form-input-box textarea {
+  resize: vertical;
+  min-height: 52px;
+}
+
+.jd-form-hint {
+  font-size: 0.68rem;
+  color: #64748b;
+}
+
+.jd-modal-footer {
+  padding: 10px 18px;
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .jd-form-grid-2 {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .jd-form-row-h {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  .jd-form-row-h > label {
+    width: 100%;
+    text-align: left;
+  }
+  .jd-form-row-h > .jd-form-input-box {
+    width: 100%;
+  }
+}
+
+/* Custom Leaflet Pin Styling */
+.custom-map-pin {
+  background: transparent;
+  border: none;
+}

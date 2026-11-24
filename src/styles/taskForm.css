@@ -1,0 +1,140 @@
+.btn-cancel {
+  background: #f5f5f5;
+  color: #333;
+}
+
+.btn-cancel:hover {
+  background: #e0e0e0;
+}
+
+.btn-save {
+  background: black;
+  color: white;
+}
+
+.btn-save:hover {
+  background: #0056b3;
+}
+
+.btn-save:disabled {
+  background: #aaa;
+  cursor: not-allowed;
+}
+
+.btn-delete {
+  background: #dc3545;
+  color: white;
+}
+
+.btn-delete:hover {
+  background: #a71d2a;
+}
+
+.edit-mode-selection {
+  background: #f8f9fa;
+  padding: 12px;
+  border-radius: 4px;
+  margin-bottom: 12px;
+}
+
+.edit-mode-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.edit-mode-option {
+  padding: 10px 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 14px;
+  background: white;
+}
+
+.edit-mode-option:hover {
+  border-color: #2196f3;
+  background: #f0f8ff;
+}
+
+.edit-mode-option.selected {
+  border-color: #2196f3;
+  background: #e3f2fd;
+  font-weight: 600;
+}
+
+.today-btn {
+  background: #ccc;
+  color: black;
+  border: 3px solid black;
+  border-radius: 8px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-weight: 600;
+  margin-left: 8px;
+}
+
+.today-btn:hover {
+  background: #f57c00;
+}
+
+.density-slider-container {
+  margin-left: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.density-label {
+  font-size: 12px;
+  color: #333;
+  font-weight: 500;
+}
+
+.density-slider {
+  display: flex;
+  background: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid #ccc;
+}
+
+.density-step {
+  padding: 4px 8px;
+  font-size: 11px;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-right: 1px solid #ccc;
+  text-align: center;
+  min-width: 50px;
+}
+
+.density-step:last-child {
+  border-right: none;
+}
+
+.density-step:hover {
+  background: #f0f0f0;
+}
+
+.density-step.active {
+  background: black;
+  color: white;
+  font-weight: 600;
+}
+
+.report-btn {
+  background: #ffffff;
+  color: black;
+  border: 3px solid black;
+  border-radius: 8px;
+  padding: 5px 12px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  margin-left: 8px;
+  transition: background 0.3s ease;
+}

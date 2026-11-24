@@ -1,0 +1,133 @@
+.savings-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.savings-balance {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1976d2;
+  padding: 8px;
+  background: #e3f2fd;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.savings-list {
+  max-height: 120px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.unpredictable-expense-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px;
+  background: #ffebee;
+  border-radius: 3px;
+  font-size: 13px;
+}
+
+.no-unpredictable {
+  color: #999;
+  font-size: 13px;
+  font-style: italic;
+}
+
+.btn-add-unpredictable {
+  background: #ff9800;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background 0.3s ease;
+}
+
+.btn-add-unpredictable:hover {
+  background: #f57c00;
+}
+
+.invested-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.invested-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  background: #f3e5f5;
+  border-radius: 4px;
+}
+
+.invested-type {
+  font-weight: 600;
+  color: #7b1fa2;
+  font-size: 14px;
+}
+
+.invested-total {
+  font-weight: 700;
+  color: #7b1fa2;
+  font-size: 16px;
+}
+
+.invested-list {
+  max-height: 120px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.invested-transaction-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px;
+  background: #f3e5f5;
+  border-radius: 3px;
+  font-size: 13px;
+}
+
+.transaction-type {
+  color: #7b1fa2;
+}
+
+.transaction-amount {
+  color: #7b1fa2;
+  font-weight: 600;
+}
+
+.no-transactions {
+  color: #999;
+  font-size: 13px;
+  font-style: italic;
+}
+
+.btn-update-invested {
+  background: #9c27b0;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background 0.3s ease;
+}
+
+.btn-update-invested:hover {
+  background: #7b1fa2;
+}
+
+.large-modal {
+  max-width: 600px;
+  max-height: 80vh;
+  overflow-y: auto;
+}

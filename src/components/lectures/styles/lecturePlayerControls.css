@@ -1,0 +1,134 @@
+/* Center: Player Controls & Scrubber */
+.player-controls-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex: 2;
+  max-width: 650px;
+}
+
+.player-buttons-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.player-btn {
+  background: transparent;
+  border: none;
+  color: #cbd5e1;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 8px;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.player-btn:hover:not(:disabled) {
+  background: #1e293b;
+  color: #ffffff;
+}
+
+.player-btn:disabled {
+  color: #475569;
+  cursor: not-allowed;
+}
+
+.player-btn.play-pause-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #3b82f6;
+  color: #ffffff;
+  font-size: 1.15rem;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+  padding: 0;
+}
+
+.player-btn.play-pause-btn:hover {
+  background: #2563eb;
+  transform: scale(1.06);
+}
+
+.player-btn.skip {
+  font-size: 0.78rem;
+  padding: 4px 8px;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  background: #1e293b;
+}
+
+.player-btn.skip:hover {
+  background: #334155;
+}
+
+/* Scrubber */
+.player-scrubber-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.time-text {
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: #94a3b8;
+  min-width: 42px;
+}
+
+.time-text.current {
+  text-align: right;
+  color: #f1f5f9;
+}
+
+.time-text.total {
+  text-align: left;
+}
+
+.player-scrubber-slider {
+  flex: 1;
+  height: 5px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: #334155;
+  border-radius: 5px;
+  outline: none;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.player-scrubber-slider:hover {
+  background: #475569;
+}
+
+.player-scrubber-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: #3b82f6;
+  cursor: pointer;
+  box-shadow: 0 0 6px rgba(59, 130, 246, 0.6);
+  transition: transform 0.15s ease;
+}
+
+.player-scrubber-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.25);
+  background: #60a5fa;
+}
+
+.player-error-banner {
+  background: #7f1d1d;
+  color: #fca5a5;
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  margin-top: 2px;
+}

@@ -13,7 +13,6 @@ const {
 
 // Import modular routers
 const tasksRouter = require('./server/routes/tasks.cjs');
-const healthRouter = require('./server/routes/health.cjs');
 const jivandishaRouter = require('./server/routes/jivandisha.cjs');
 const userRouter = require('./server/routes/user.cjs');
 const financesRouter = require('./server/routes/finances.cjs');
@@ -75,7 +74,6 @@ app.use(async (req, res, next) => {
 
 // Mount modular API routers
 app.use('/api', tasksRouter);
-app.use('/api', healthRouter);
 app.use('/api/jivandisha', jivandishaRouter);
 app.use('/api', userRouter);
 app.use('/api/finances', financesRouter);

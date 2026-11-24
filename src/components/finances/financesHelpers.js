@@ -4,32 +4,22 @@ export const formatIndianCounting = (amount) => {
     const crores = Math.floor(absAmount / 10000000)
     const remainder = absAmount % 10000000
     const lakhs = Math.floor(remainder / 100000)
-    if (lakhs > 0) {
-      return `${crores} Crore ${lakhs} Lakh`
-    }
-    return `${crores} Crore`
+    return lakhs > 0 ? `${crores} Crore ${lakhs} Lakh` : `${crores} Crore`
   }
   if (absAmount >= 100000) {
     const lakhs = Math.floor(absAmount / 100000)
     const remainder = absAmount % 100000
     const thousands = Math.floor(remainder / 1000)
-    if (thousands > 0) {
-      return `${lakhs} Lakh ${thousands} Thousand`
-    }
-    return `${lakhs} Lakh`
+    return thousands > 0 ? `${lakhs} Lakh ${thousands} Thousand` : `${lakhs} Lakh`
   }
   if (absAmount >= 1000) {
     const thousands = Math.floor(absAmount / 1000)
     const remainder = absAmount % 1000
     const hundreds = Math.floor(remainder / 100)
-    if (hundreds > 0) {
-      return `${thousands} Thousand ${hundreds} Hundred`
-    }
-    return `${thousands} Thousand`
+    return hundreds > 0 ? `${thousands} Thousand ${hundreds} Hundred` : `${thousands} Thousand`
   }
   if (absAmount >= 100) {
-    const hundreds = Math.floor(absAmount / 100)
-    return `${hundreds} Hundred`
+    return `${Math.floor(absAmount / 100)} Hundred`
   }
   return ''
 }
@@ -59,4 +49,37 @@ export const calculateSavings = (month) => {
 export const calculateTotalInvested = (month) => {
   if (!month) return 0
   return (month.investedTransactions || []).reduce((sum, trans) => sum + (Number(trans.amount) || 0), 0)
+}
+
+export const generateInitialFinanceData = () => {
+  const months = []
+  const currentDate = new Date()
+  for (let i = 0; i < 12; i++) {
+    const monthDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + i, 1)
+    months.push({
+      id: i + 1,
+      month: monthDate.toLocaleString('default', { month: 'long' }),
+      year: monthDate.getFullYear(),
+      income: 0,
+      incomeConfirmed: false,
+      knownExpenses: [],
+      unpredictableExpenses: [],
+      savings: 0,
+      investedAmount: 0,
+      investedType: 'None',
+      investedTransactions: []
+    })
+  }
+  return months
+}
+
+export const getMonthsToUpdate = (financeData, targetMonthId, endDate) => {
+  if (endDate) {
+    return financeData.filter(m => {
+      const monthDate = new Date(m.year, new Date(`${m.month} 1, ${m.year}`).getMonth(), 1)
+      return monthDate <= endDate
+    })
+  }
+  const single = financeData.find(m => m.id === targetMonthId)
+  return single ? [single] : []
 }

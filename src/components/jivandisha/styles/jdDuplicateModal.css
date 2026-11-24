@@ -1,0 +1,134 @@
+.jd-dup-item-amt {
+  font-weight: 700;
+  color: #b45309;
+}
+
+.jd-dup-item-status {
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.jd-dup-item-status.paid {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.jd-dup-item-status.pending {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+/* Duplicate Confirmation Modal Card */
+.jd-modal-card.jd-duplicate-modal {
+  max-width: 680px;
+  height: auto;
+  max-height: calc(100vh - 40px);
+  text-align: left;
+}
+
+.jd-duplicate-compare-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+@media (max-width: 640px) {
+  .jd-duplicate-compare-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.jd-compare-box {
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.jd-compare-box.new {
+  background: #f8fafc;
+  border: 1.5px solid #cbd5e1;
+}
+
+.jd-compare-box.existing {
+  background: #fffbeb;
+  border: 1.5px solid #fde68a;
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.jd-compare-box-title {
+  font-weight: 700;
+  font-size: 0.82rem;
+  margin-bottom: 4px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  color: #1e293b;
+}
+
+.jd-compare-box.existing .jd-compare-box-title {
+  color: #92400e;
+}
+
+.jd-compare-box-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+}
+
+.jd-compare-box-row.highlight {
+  background: #fee2e2;
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+  color: #991b1b;
+}
+
+.jd-compare-label {
+  color: #64748b;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.jd-compare-val {
+  color: #0f172a;
+  font-weight: 600;
+  text-align: right;
+  word-break: break-word;
+}
+
+.jd-dup-existing-card {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+  border-bottom: 1px dashed #f59e0b;
+}
+
+.jd-dup-existing-card:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.jd-duplicate-prompt-banner {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.82rem;
+  color: #1e40af;
+  line-height: 1.4;
+}
+
+/* ==================== EXCEL SHEET IMPORTER & MULTI-ORDER VERIFICATION ==================== */

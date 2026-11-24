@@ -1,0 +1,128 @@
+/* 1-Row Collapsed Header Bar (Strictly 1 Single Line, No Wrapping) */
+.lectures-collapsed-bar {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 7px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  flex-wrap: nowrap; /* strictly single line */
+  overflow-x: auto; /* horizontally scrollable if viewport is too narrow */
+  white-space: nowrap;
+  scrollbar-width: thin;
+}
+
+.collapsed-stats-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.collapsed-stat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  color: #334155;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+.collapsed-stat-pill.heard {
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+  color: #065f46;
+  font-weight: 600;
+}
+
+.collapsed-stat-pill.pending {
+  background: #fffbeb;
+  border-color: #fde68a;
+  color: #92400e;
+}
+
+.collapsed-controls-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  justify-content: flex-end;
+}
+
+.collapsed-controls-group .collapsed-search {
+  position: relative;
+  width: 140px;
+  min-width: 110px;
+  max-width: 170px;
+  flex: none;
+}
+
+.collapsed-controls-group .collapsed-search input {
+  padding: 5px 8px 5px 28px;
+  font-size: 0.8rem;
+  height: 32px;
+}
+
+.collapsed-controls-group .collapsed-search .search-icon {
+  left: 8px;
+  font-size: 0.8rem;
+}
+
+.collapsed-controls-group .filter-select {
+  padding: 4px 8px;
+  font-size: 0.78rem;
+  height: 32px;
+  max-width: 125px;
+}
+
+.collapsed-controls-group .view-mode-toggle {
+  display: flex;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  overflow: hidden;
+  height: 32px;
+}
+
+.collapsed-controls-group .view-mode-btn {
+  padding: 4px 8px;
+  font-size: 0.76rem;
+  height: 100%;
+  display: inline-flex;
+  align-items: center;
+}
+
+.collapsed-controls-group .audio-connect-group {
+  padding: 2px 4px 2px 8px;
+  height: 32px;
+}
+
+.collapsed-controls-group .audio-location-input-wrapper {
+  min-width: 105px;
+  max-width: 140px;
+}
+
+.collapsed-controls-group .audio-location-input {
+  font-size: 0.76rem;
+}
+
+.collapsed-controls-group .connect-btn {
+  padding: 3px 8px;
+  font-size: 0.76rem;
+  height: 26px;
+  gap: 4px;
+}
+
+.collapsed-controls-group .collapse-trigger-btn.symbol-only {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  font-size: 0.88rem;
+}

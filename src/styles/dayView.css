@@ -1,0 +1,134 @@
+.task-item {
+  background: #e3f2fd;
+  border-left: 3px solid #2196f3;
+  padding: 4px;
+  margin-bottom: 3px;
+  border-radius: 2px;
+  font-size: 10px;
+}
+
+.task-time {
+  font-weight: 600;
+  color: #1976d2;
+  margin-bottom: 1px;
+}
+
+.task-title {
+  color: #333;
+}
+
+/* Day View Styles */
+.day-view {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+  background: white;
+  margin: 5px 0;
+}
+
+.day-header-large {
+  padding: 15px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e0e0e0;
+  text-align: center;
+}
+
+.day-name-large {
+  font-size: 1.5rem;
+  color: #555;
+  margin-bottom: 5px;
+}
+
+.day-number-large {
+  font-size: 3rem;
+  color: #333;
+  font-weight: 600;
+}
+
+.day-tasks {
+  flex: 1;
+  padding: 15px;
+  overflow-y: auto;
+}
+
+.task-item-large {
+  background: #e3f2fd;
+  border-left: 4px solid #2196f3;
+  padding: 12px;
+  margin-bottom: 10px;
+  border-radius: 4px;
+}
+
+.task-item-large .task-time {
+  font-size: 14px;
+  margin-bottom: 5px;
+}
+
+.task-item-large .task-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 5px;
+  color: #333;
+}
+
+.task-item-large .task-description {
+  font-size: 14px;
+  color: #666;
+  font-weight: 400;
+}
+
+.no-tasks {
+  text-align: center;
+  padding: 40px;
+  color: #999;
+}
+
+.add-task-btn {
+  margin-top: 15px;
+  padding: 10px 20px;
+  background: black;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.add-task-btn:hover {
+  background: #0056b3;
+}
+
+/* Month View Styles */
+.month-view {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+  background: white;
+  margin: 5px 0;
+}
+
+.month-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  background: #f8f9fa;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.month-day-header {
+  padding: 8px;
+  text-align: center;
+  font-weight: 600;
+  color: #555;
+  font-size: 11px;
+  border-right: 1px solid #e0e0e0;
+}
+
+.month-day-header:last-child {
+  border-right: none;
+}

@@ -1,0 +1,135 @@
+.asset-card {
+  width: 215px;
+  min-height: 215px;
+  border-radius: 8px;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border: 2px solid #e0e0e0;
+  background: #fafafa;
+}
+
+.asset-asset {
+  background: #e8f5e9;
+  border-color: #4caf50;
+}
+
+.asset-liability {
+  background: #ffebee;
+  border-color: #ef5350;
+}
+
+.asset-insurance {
+  background: #e3f2fd;
+  border-color: #2196f3;
+}
+
+.asset-insurance .asset-card-amount {
+  color: #1565c0;
+}
+
+.asset-card-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 2px;
+}
+
+.asset-card-updated {
+  font-size: 11px;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.asset-card-amount {
+  font-size: 24px;
+  font-weight: 700;
+  color: #2e7d32;
+  margin-bottom: 4px;
+}
+
+.asset-card-indian {
+  font-size: 11px;
+  color: #888;
+  font-style: italic;
+  margin-bottom: 8px;
+}
+
+.asset-liability .asset-card-amount {
+  color: #c62828;
+}
+
+.asset-card-tags {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.asset-card-tags {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.asset-tag {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.tag-movable {
+  background: #bbdefb;
+  color: #1565c0;
+}
+
+.tag-immovable {
+  background: #fff9c4;
+  color: #f57f17;
+}
+
+.tag-asset {
+  background: #c8e6c9;
+  color: #2e7d32;
+}
+
+.tag-liability {
+  background: #ffcdd2;
+  color: #c62828;
+}
+
+.tag-insurance {
+  background: #bbdefb;
+  color: #1565c0;
+}
+
+.tag-percent {
+  background: #e1bee7;
+  color: #6a1b9a;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 2px 8px;
+}
+
+.asset-card-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-edit-asset {
+  background: #1976d2;
+  color: white;
+  border: none;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  transition: background 0.3s ease;
+}
+
+.btn-edit-asset:hover {
+  background: #1565c0;
+}
